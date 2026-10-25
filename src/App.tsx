@@ -12,6 +12,7 @@ import { DayPage } from './pages/day/DayPage';
 import { WeekPage } from './pages/period/WeekPage';
 import { MonthPage } from './pages/period/MonthPage';
 import { YearPage } from './pages/period/YearPage';
+import { LifePage } from './pages/life/LifePage';
 
 export function App() {
   return (
@@ -33,7 +34,7 @@ export function App() {
               <Route path="semaine" element={<WeekPage />} />
               <Route path="mois" element={<MonthPage />} />
               <Route path="annee" element={<YearPage />} />
-              <Route path="vie" element={<Placeholder title="Ma vie" />} />
+              <Route path="vie" element={<LifePage />} />
               <Route path="precedent" element={<Placeholder title="Programme précédent" />} />
               <Route path="rapport" element={<Placeholder title="Mon rapport" />} />
             </Route>

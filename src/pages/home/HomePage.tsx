@@ -134,6 +134,15 @@ export function HomePage() {
         </div>
       </div>
 
+      <Link to="/tableaux" className="linkcard">
+        <Icon name="board" />
+        <div className="t">
+          <b>Mes tableaux</b>
+          <small>Projets d'équipe : cartes, discussion et rapport du jour</small>
+        </div>
+        <span className="mono lime">›</span>
+      </Link>
+
       <Link to="/precedent" className="linkcard">
         <Icon name="past" />
         <div className="t">

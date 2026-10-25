@@ -87,3 +87,14 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Les avatars stockés dans le bucket privé `avatars` deviennent lisibles par les personnes qui partagent un tableau (politique `avatars_select_board_members`). Aucune autre colonne de `profiles` n'est exposée : la vue `member_profiles` ne contient que id, prénom, nom et avatar.
 - Supprimer son compte supprime les tableaux dont on est owner (cascade sur `boards.owner_id`).
 - Le SQL a été vérifié dans PGlite (PostgreSQL embarqué) avec un socle qui imite Supabase : 0001 et 0002 appliqués deux fois de suite sans erreur, et 31 contrôles d'accès avec trois utilisateurs (owner, membre, observateur, non-membre).
+
+### Phase 3 — Écrans des tableaux
+- Code dans `src/features/boards/`. L'icône « Tableaux » est dans l'en-tête, à côté de « Mon résumé » (il n'y avait pas encore de cloche) ; la carte « Mes tableaux » est sur l'accueil. La barre d'onglets garde ses 6 onglets.
+- Tout le contenu d'un tableau (listes, cartes, membres, étiquettes, assignations, checklists) est dans une seule entrée de cache React Query `['board', id]` ; les déplacements, coches et assignations y sont appliqués de façon optimiste puis annulés en cas d'erreur.
+- Onglet du tableau dans l'URL : `/tableaux/:id?vue=cartes|discussion|equipe`.
+- Glisser-déposer : capteurs souris (6 px) et tactile (250 ms, 8 px), plus clavier. Le défilement automatique horizontal de dnd-kit est désactivé (il se battait avec le scroll-snap) : près du bord de l'écran, la liste voisine s'affiche après 450 ms.
+- Réordonnancement de la checklist avec des boutons ↑ ↓ (plus simple et plus précis au doigt qu'un glisser-déposer dans un panneau qui défile).
+- Les mentions des commentaires sont détectées (`extractMentions`) ; leur enregistrement dans la table `mentions` est ajouté à la phase 6, une fois la table créée (phase 4).
+- « Planifier dans ma journée » crée une tâche de catégorie « Travail » liée à la carte (`tasks.card_id`).
+- Invitation : le jeton est gardé dans `sessionStorage` ; après la connexion et la fin du profil, la garde `ProtectedRoute` ramène sur `/invitation/:token`. « Plus tard » oublie l'invitation.
+- Temps réel : un canal par tableau ; `checklist_items` et `card_comments` n'ont pas de `board_id`, ils sont écoutés sans filtre (la RLS ne transmet que les lignes visibles) et triés côté application.

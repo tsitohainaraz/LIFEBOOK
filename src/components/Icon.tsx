@@ -78,6 +78,18 @@ const PATHS = {
   ),
   check: <path d="M5 12l5 5 9-10" />,
   trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
+  board: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16M15 4v16M5.5 8h1.5M11 8h2M11 11h2M17 8h1.5" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -31,6 +31,9 @@ export function AppShell() {
                 Hors ligne
               </span>
             )}
+            <Link to="/tableaux" className={`iconbtn ${styles.sumbtn}`} aria-label="Tableaux">
+              <Icon name="board" strokeWidth={2} />
+            </Link>
             <button
               type="button"
               className={`iconbtn ${styles.sumbtn}`}

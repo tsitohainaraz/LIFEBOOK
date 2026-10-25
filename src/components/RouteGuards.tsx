@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Splash } from './Splash';
 import { ErrorState } from './States';
+import { readPendingInvite } from '../features/boards/pendingInvite';
 
 /** Écrans réservés aux personnes connectées dont le profil est terminé. */
 export function ProtectedRoute() {
@@ -11,6 +12,9 @@ export function ProtectedRoute() {
   if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   if (!profile) return <ProfileFailure message={profileError} retry={refreshProfile} />;
   if (!profile.onboarding_done_at) return <Navigate to="/onboarding" replace />;
+  // Invitation reçue avant la connexion : on y retourne une fois connecté et le profil terminé.
+  const invite = readPendingInvite();
+  if (invite) return <Navigate to={`/invitation/${encodeURIComponent(invite)}`} replace />;
   return <Outlet />;
 }
 

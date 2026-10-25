@@ -16,10 +16,12 @@ interface Props {
   onPlan: () => void;
   onReport: () => void;
   busy?: boolean;
+  /** Contenu affiché sous les boutons (bloc « À suivre »). */
+  footer?: ReactNode;
 }
 
 /** Cercle « Maintenant » : 5 états, anneau de progression et compte à rebours. */
-export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, busy }: Props) {
+export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, busy, footer }: Props) {
   const { mode, task, start, end, lateCount } = result;
   let sec = 0;
   let frac = 0;
@@ -88,6 +90,7 @@ export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, b
             Mon rapport
           </button>
         </div>
+        {footer}
       </section>
     );
   }
@@ -142,6 +145,7 @@ export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, b
         </button>
       </div>
       {more}
+      {footer}
     </section>
   );
 }

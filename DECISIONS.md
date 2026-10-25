@@ -68,3 +68,12 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
   - « Aujourd'hui » et « maintenant » sont calculés dans le fuseau du profil (`profiles.timezone`, `Indian/Antananarivo` par défaut), modifiable dans le menu du compte.
 - `currentDate()` sert à l'affichage et aux calculs du jour ; `nowISO()` sert aux horodatages enregistrés en base (`done_at`, consentement…), toujours en UTC réel.
 - Limite : la bibliothèque Supabase utilise l'horloge de l'appareil pour l'expiration de la session. Avec une horloge très fausse (plusieurs heures en temps universel, pas seulement le fuseau), la session peut se renouveler plus souvent que prévu.
+
+## Tableaux d'équipe et « À suivre » (branche feature/super-trello)
+
+### Phase 1 — « À suivre »
+- Le « bloc virtuel du rendez-vous de planification » cité par PROMPT_SUPER_TRELLO.md n'existe pas dans le code : `collectPlannedItems()` réunit les tâches avec une heure (et les cartes à partir de la phase 7). La source `'planning'` est prévue dans le type `PlannedItem` mais n'est pas encore alimentée.
+- L'accueil charge désormais les tâches d'aujourd'hui **et de demain** (pour « le premier élément de demain »). Le programme du jour n'affiche que celles d'aujourd'hui.
+- Les dates des éléments planifiés sont en heure murale du fuseau du profil, comme `currentDate()`.
+- Le bloc « À suivre » est un emplacement `footer` ajouté au composant `NowRing` existant.
+- Le test de `formatRelative` et de `phraseUpcoming` est dans `src/utils/upcoming.test.ts` (les fonctions sont dans `src/utils/now.ts`, comme demandé).

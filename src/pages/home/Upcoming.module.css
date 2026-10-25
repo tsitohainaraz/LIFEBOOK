@@ -1,0 +1,106 @@
+.box {
+  width: 100%;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  text-align: left;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c);
+  flex: none;
+  margin-top: 5px;
+}
+.t {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.say {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.say em {
+  font-style: normal;
+  color: var(--lime);
+}
+.t small {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.soon {
+  border-color: var(--urgent);
+}
+.soon .say,
+.soon .say em {
+  color: var(--urgent);
+}
+.blink {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--urgent);
+  box-shadow: 0 0 10px var(--urgent);
+  flex: none;
+  margin-top: 6px;
+  animation: blink 1s ease-in-out infinite;
+}
+.small {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: left;
+  padding: 6px 2px;
+  min-height: 32px;
+}
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.link {
+  background: none;
+  border: none;
+  color: var(--lime);
+  font-weight: 600;
+  padding: 10px 0;
+  min-height: 44px;
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}

@@ -4,7 +4,7 @@ import { useProfile } from '../../contexts/AuthContext';
 import { useClock } from '../../hooks/useClock';
 import { useHealthContext } from '../../hooks/useHealth';
 import { useGoals } from '../../hooks/useGoals';
-import { useAddTasks, useTasksOn, useToggleTask, useUpdateTask } from '../../hooks/useTasks';
+import { useAddTasks, useTasksRange, useToggleTask, useUpdateTask } from '../../hooks/useTasks';
 import { Icon } from '../../components/Icon';
 import { LaterSheet } from '../../components/LaterSheet';
 import { NowRing } from '../../components/NowRing';
@@ -16,7 +16,8 @@ import { cap, fmtDate, fmtDuration, fmtNumber, hhmm, nowMinutes, pad, todayISO, 
 import { STATUS_ORDER, goalStatus, goalStatusLabel } from '../../utils/goals';
 import { REASONS, WHO_WEEKLY_MINUTES, healthReasons, mustAskDoctor, suggestedSportMinutes } from '../../utils/health';
 import { daysUsedAndLeft, lifeCountdown, lifeSummary } from '../../utils/life';
-import { freeMinutesBeforeNext, pickNow, taskEnd, type NowResult } from '../../utils/now';
+import { collectPlannedItems, freeMinutesBeforeNext, pickNow, taskEnd, type NowResult, type PlannedItem } from '../../utils/now';
+import { Upcoming } from './Upcoming';
 import { firstFreeSlot } from '../../utils/schedule';
 import type { Category, ProfileRow, TaskRow } from '../../types/database';
 import styles from './Home.module.css';
@@ -26,7 +27,8 @@ export function HomePage() {
   const profile = useProfile();
   const navigate = useNavigate();
   const today = todayISO();
-  const tasksQ = useTasksOn(today);
+  // Aujourd'hui et demain : demain sert au bloc « À suivre ».
+  const tasksQ = useTasksRange(today, addDaysISO(today, 1));
   const goalsQ = useGoals();
   const toggle = useToggleTask();
   const update = useUpdateTask();
@@ -35,7 +37,9 @@ export function HomePage() {
   const [recoOpen, setRecoOpen] = useState(false);
   // L'état « Maintenant » est recalculé toutes les 15 s et à chaque changement de tâche.
   const tick15 = useClock(15_000);
-  const tasks = useMemo(() => tasksQ.data ?? [], [tasksQ.data]);
+  const allTasks = useMemo(() => tasksQ.data ?? [], [tasksQ.data]);
+  const tasks = useMemo(() => allTasks.filter((t) => t.date === today), [allTasks, today]);
+  const planned = useMemo(() => collectPlannedItems({ tasks: allTasks }), [allTasks]);
   const now = useMemo(() => pickNow(tasks, currentDate()), [tasks, tick15]);
 
   const birth = profile.birth_date;
@@ -80,6 +84,7 @@ export function HomePage() {
           onLater={setLaterTask}
           onPlan={() => navigate('/jour')}
           onReport={() => navigate('/rapport')}
+          planned={planned}
         />
       )}
 
@@ -234,8 +239,10 @@ function LiveNow({
   onLater,
   onPlan,
   onReport,
+  planned,
 }: {
   result: NowResult<TaskRow>;
+  planned: PlannedItem[];
   busy: boolean;
   onFinish: (t: TaskRow) => void;
   onLater: (t: TaskRow) => void;
@@ -252,6 +259,7 @@ function LiveNow({
       onLater={() => result.task && onLater(result.task)}
       onPlan={onPlan}
       onReport={onReport}
+      footer={<Upcoming items={planned} now={result} />}
     />
   );
 }

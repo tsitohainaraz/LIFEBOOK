@@ -5,6 +5,7 @@ import { authErrorMessage } from '../../utils/authErrors';
 import { Logo } from '../../components/Logo';
 import { clearPendingEmail, readPendingEmail } from './pendingEmail';
 import styles from './Auth.module.css';
+import { currentMs } from '../../lib/serverTime';
 
 const LEN = 6;
 const RESEND_DELAY = 60;
@@ -19,7 +20,7 @@ export function VerifyPage() {
   const [info, setInfo] = useState('');
   const [checking, setChecking] = useState(false);
   const [wait, setWait] = useState(() => {
-    const elapsed = state?.sentAt ? Math.floor((Date.now() - state.sentAt) / 1000) : 0;
+    const elapsed = state?.sentAt ? Math.floor((currentMs() - state.sentAt) / 1000) : 0;
     return Math.max(0, RESEND_DELAY - elapsed);
   });
   const inputs = useRef<(HTMLInputElement | null)[]>([]);

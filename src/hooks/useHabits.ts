@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { HabitLogRow, HabitRow } from '../types/database';
+import { nowISO } from '../lib/serverTime';
 
 export function useHabits() {
   const { user } = useAuth();
@@ -45,7 +46,7 @@ export function useHabitMutations() {
 
   const archiveHabit = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('habits').update({ archived_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await supabase.from('habits').update({ archived_at: nowISO() }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['habits', user?.id] }),

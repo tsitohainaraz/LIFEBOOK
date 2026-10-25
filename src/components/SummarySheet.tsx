@@ -9,6 +9,7 @@ import { lifeSummary } from '../utils/life';
 import { Sheet } from './Sheet';
 import { useToast } from './Toast';
 import styles from '../pages/home/Home.module.css';
+import { currentDate, toZoned } from '../lib/serverTime';
 
 /** « Mon résumé » : semaines à dormir, à travailler, temps libre, santé, objectifs. */
 export function SummarySheet({ onClose, onHealthLog }: { onClose: () => void; onHealthLog: () => void }) {
@@ -16,7 +17,7 @@ export function SummarySheet({ onClose, onHealthLog }: { onClose: () => void; on
   const goals = useGoals().data ?? [];
   const wellbeing = useLatestWellbeing();
   const [editing, setEditing] = useState(false);
-  const now = new Date();
+  const now = currentDate();
   const L = profile.birth_date
     ? lifeSummary(
         {
@@ -59,7 +60,7 @@ export function SummarySheet({ onClose, onHealthLog }: { onClose: () => void; on
               <span className={styles.k}>État de santé</span>
               <span className={styles.n}>
                 {w
-                  ? `mis à jour ${w.at.slice(0, 10) === toISODate(now) ? "aujourd'hui" : fmtDate(w.at.slice(0, 10), 'd MMM')}`
+                  ? `mis à jour ${toISODate(toZoned(Date.parse(w.at))) === toISODate(now) ? "aujourd'hui" : fmtDate(toISODate(toZoned(Date.parse(w.at))), 'd MMM')}`
                   : "touche pour l'indiquer"}
               </span>
             </span>

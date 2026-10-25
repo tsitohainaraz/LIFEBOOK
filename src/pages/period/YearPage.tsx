@@ -12,12 +12,13 @@ import { cap, daysInMonth, fmtDate, pad, parseISODate, weekOfYear } from '../../
 import { STATUS_ORDER, goalProgress, goalStatus, goalStatusLabel } from '../../utils/goals';
 import type { GoalDomain, GoalRow, GoalStepRow } from '../../types/database';
 import styles from './Period.module.css';
+import { currentDate, nowISO } from '../../lib/serverTime';
 
 const QUARTER_END = ['03-31', '06-30', '09-30', '12-31'];
 
 export function YearPage() {
   const [params, setParams] = useSearchParams();
-  const now = new Date();
+  const now = currentDate();
   const Y0 = now.getFullYear();
   const y = Number(params.get('annee')) || Y0;
   const first = `${y}-01-01`;
@@ -241,7 +242,7 @@ export function YearPage() {
                     aria-label={`Objectif ${g.title} atteint`}
                     onClick={() =>
                       updateGoal.mutate(
-                        { id: g.id, values: { done_at: g.done_at ? null : new Date().toISOString() } },
+                        { id: g.id, values: { done_at: g.done_at ? null : nowISO() } },
                         { onSuccess: () => !g.done_at && toast('Objectif atteint, bravo !'), onError },
                       )
                     }
@@ -346,7 +347,7 @@ function StepRow({ s, goal }: { s: GoalStepRow; goal: GoalRow | undefined }) {
         className="check"
         aria-pressed={!!s.done_at}
         aria-label={`Étape ${s.title} faite`}
-        onClick={() => updateStep.mutate({ id: s.id, values: { done_at: s.done_at ? null : new Date().toISOString() } })}
+        onClick={() => updateStep.mutate({ id: s.id, values: { done_at: s.done_at ? null : nowISO() } })}
       >
         {s.done_at ? '✓' : ''}
       </button>

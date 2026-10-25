@@ -28,6 +28,7 @@ import { taskEnd } from '../../utils/now';
 import type { TaskRow } from '../../types/database';
 import { CategorySplit } from '../day/CategorySplit';
 import styles from './Period.module.css';
+import { currentDate } from '../../lib/serverTime';
 
 const H0 = 6;
 const H1 = 22;
@@ -183,7 +184,7 @@ export function WeekPage() {
 
 function WeekGrid({ days, today, tasks, onOpen }: { days: string[]; today: string; tasks: TaskRow[]; onOpen: (d: string) => void }) {
   const H = (H1 - H0) * PX;
-  const now = new Date();
+  const now = currentDate();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   return (
     <div className="card" style={{ padding: '14px 10px' }}>

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database, TaskRow } from '../types/database';
+import { nowISO } from '../lib/serverTime';
 
 export type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 export type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
@@ -104,7 +105,7 @@ export function useToggleTask() {
   return {
     ...update,
     toggle: (task: Pick<TaskRow, 'id' | 'done_at'>) =>
-      update.mutateAsync({ id: task.id, values: { done_at: task.done_at ? null : new Date().toISOString() } }),
+      update.mutateAsync({ id: task.id, values: { done_at: task.done_at ? null : nowISO() } }),
   };
 }
 

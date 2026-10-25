@@ -6,6 +6,7 @@ import { fmtDate, fmtDuration, hhmm, todayISO, toMin } from '../utils/dates';
 import { taskEnd } from '../utils/now';
 import { postponeSlot, type LaterOption } from '../utils/schedule';
 import type { TaskRow } from '../types/database';
+import { currentDate } from '../lib/serverTime';
 
 /** « Faire plus tard » : 15 min, 30 min, 1 h, ce soir, demain, ou une heure choisie. La durée est conservée. */
 export function LaterSheet({ task, onClose }: { task: TaskRow; onClose: () => void }) {
@@ -17,7 +18,7 @@ export function LaterSheet({ task, onClose }: { task: TaskRow; onClose: () => vo
 
   async function choose(option: LaterOption) {
     setError('');
-    const slot = postponeSlot(task, option, new Date());
+    const slot = postponeSlot(task, option, currentDate());
     try {
       await update.mutateAsync({
         id: task.id,

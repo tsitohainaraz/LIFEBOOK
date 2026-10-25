@@ -5,7 +5,8 @@ import { useAddHealthLog, useDeleteHealthLog, useHealthLogs, useHealthProfile } 
 import { useTasksRange } from '../../hooks/useTasks';
 import { ErrorState, LoadingState } from '../../components/States';
 import { useToast } from '../../components/Toast';
-import { addDaysISO, fmtDate, mondayOf, toISODate, todayISO, toMin } from '../../utils/dates';
+import { addDaysISO, fmtDate, mondayOf, pad, toISODate, todayISO, toMin } from '../../utils/dates';
+import { toZoned } from '../../lib/serverTime';
 import { bmi, bmiCategory, classifyBloodPressure, formatBmi, WHO_WEEKLY_MINUTES } from '../../utils/health';
 import { niceRange, pathOf, scalePoints, type Point } from '../../utils/chart';
 import { taskEnd } from '../../utils/now';
@@ -246,10 +247,10 @@ function LineChart({ series, unit, label }: { series: { name: string; color: str
           );
         })}
         <text x={0} y={H + 16} fontSize="9" fill="var(--muted)" fontFamily="JetBrains Mono, monospace">
-          {fmtDate(toISODate(new Date(t0)), 'd MMM')}
+          {fmtDate(toISODate(toZoned(t0)), 'd MMM')}
         </text>
         <text x={W} y={H + 16} textAnchor="end" fontSize="9" fill="var(--muted)" fontFamily="JetBrains Mono, monospace">
-          {fmtDate(toISODate(new Date(t1)), 'd MMM')}
+          {fmtDate(toISODate(toZoned(t1)), 'd MMM')}
         </text>
       </svg>
       <figcaption className="legend2">
@@ -310,13 +311,13 @@ function History({ logs }: { logs: HealthLogRow[] }) {
               l.sleep_h != null ? `${l.sleep_h} h de sommeil` : null,
               l.wellbeing_pct != null ? `bien-être ${l.wellbeing_pct} %` : null,
             ].filter(Boolean);
-            const d = new Date(l.logged_at);
+            const d = toZoned(Date.parse(l.logged_at));
             return (
               <div key={l.id} className="item">
                 <div className="t">
                   <span>{parts.join(' · ')}</span>
                   <small>
-                    {fmtDate(toISODate(d), 'EEEE d MMMM')} à {d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    {fmtDate(toISODate(d), 'EEEE d MMMM')} à {pad(d.getHours())}:{pad(d.getMinutes())}
                   </small>
                 </div>
                 {bp && <span className={`st ${bp.tone === 'ok' ? 'ok' : bp.tone === 'warn' ? 'urgent' : bp.tone === 'bad' ? 'late' : 'soon'}`}>{bp.label}</span>}

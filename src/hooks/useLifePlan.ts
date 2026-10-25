@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { BucketItemRow, LifePlanRow } from '../types/database';
+import { nowISO } from '../lib/serverTime';
 
 type LifePatch = Partial<Pick<LifePlanRow, 'mission' | 'values' | 'wheel' | 'legacy'>>;
 
@@ -75,7 +76,7 @@ export function useBucketMutations() {
     mutationFn: async (item: BucketItemRow) => {
       const { error } = await supabase
         .from('bucket_items')
-        .update({ done_at: item.done_at ? null : new Date().toISOString() })
+        .update({ done_at: item.done_at ? null : nowISO() })
         .eq('id', item.id);
       if (error) throw error;
     },
@@ -83,7 +84,7 @@ export function useBucketMutations() {
       await qc.cancelQueries({ queryKey: key });
       const previous = qc.getQueryData<BucketItemRow[]>(key);
       qc.setQueryData<BucketItemRow[]>(key, (l) =>
-        (l ?? []).map((b) => (b.id === item.id ? { ...b, done_at: item.done_at ? null : new Date().toISOString() } : b)),
+        (l ?? []).map((b) => (b.id === item.id ? { ...b, done_at: item.done_at ? null : nowISO() } : b)),
       );
       return { previous };
     },

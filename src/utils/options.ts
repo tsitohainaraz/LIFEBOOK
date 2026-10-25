@@ -9,6 +9,7 @@ import type {
   LifeStatus,
   Smoking,
 } from '../types/database';
+import { currentDate } from '../lib/serverTime';
 
 // Listes de choix du profil (maquette 4). La valeur stockée est à gauche, le libellé affiché à droite.
 
@@ -119,7 +120,7 @@ export function labelOf<T extends string>(list: { value: T; label: string }[], v
 }
 
 /** Âge en années révolues à une date donnée. */
-export function ageOn(birth: string, today: Date = new Date()): number {
+export function ageOn(birth: string, today: Date = currentDate()): number {
   const [y, m, d] = birth.split('-').map(Number);
   let age = today.getFullYear() - y;
   const mm = today.getMonth() + 1;
@@ -128,7 +129,7 @@ export function ageOn(birth: string, today: Date = new Date()): number {
 }
 
 /** Validation de la date de naissance : pas dans le futur, âge entre 10 et 110 ans. */
-export function birthDateError(birth: string, today: Date = new Date()): string {
+export function birthDateError(birth: string, today: Date = currentDate()): string {
   if (!birth) return 'Indique ta date de naissance.';
   const [y, m, d] = birth.split('-').map(Number);
   const date = new Date(y, m - 1, d);

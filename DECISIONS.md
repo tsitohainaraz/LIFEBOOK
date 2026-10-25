@@ -60,3 +60,11 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Programme précédent : une page = 20 jours (ou 20 semaines) d'historique ; seuls les jours avec des tâches ou un rapport sont affichés ; bouton « Voir avant le … » pour la page suivante (jusqu'à 5 ans).
 - Journal de santé : route `/sante`, ouverte depuis « Mon résumé ». Une nouvelle pesée met aussi à jour `health_profiles.weight_kg` (l'IMC est recalculé).
 - Compteur OMS : minutes des activités de catégorie « Sport » cochées dans la semaine.
+
+## Heure et fuseau horaire (après l'étape 9)
+
+- L'application ne fait confiance ni à l'horloge ni au fuseau du téléphone (`src/lib/serverTime.ts`).
+  - L'instant exact vient de l'en-tête HTTP `Date` du serveur (Vercel ou serveur de développement), mesuré au démarrage, toutes les 10 minutes et au retour du réseau. L'application attend cette mesure au plus 3 s avant de s'afficher.
+  - « Aujourd'hui » et « maintenant » sont calculés dans le fuseau du profil (`profiles.timezone`, `Indian/Antananarivo` par défaut), modifiable dans le menu du compte.
+- `currentDate()` sert à l'affichage et aux calculs du jour ; `nowISO()` sert aux horodatages enregistrés en base (`done_at`, consentement…), toujours en UTC réel.
+- Limite : la bibliothèque Supabase utilise l'horloge de l'appareil pour l'expiration de la session. Avec une horloge très fausse (plusieurs heures en temps universel, pas seulement le fuseau), la session peut se renouveler plus souvent que prévu.

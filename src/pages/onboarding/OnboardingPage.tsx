@@ -37,6 +37,8 @@ import type {
   Smoking,
 } from '../../types/database';
 import styles from './Onboarding.module.css';
+import { nowISO } from '../../lib/serverTime';
+import { todayISO } from '../../utils/dates';
 
 // Phases enregistrées dans profiles.onboarding_step (1 à 6).
 const PHASES = ['identity', 'situation', 'consent', 'health', 'family', 'summary'] as const;
@@ -351,7 +353,7 @@ export function OnboardingPage() {
     await run(async () => {
       if (accept) {
         await updateProfile.mutateAsync({
-          health_consent_at: new Date().toISOString(),
+          health_consent_at: nowISO(),
           onboarding_step: Math.max(profile?.onboarding_step ?? 1, stepOf('health')),
         });
         goTo('health');
@@ -364,7 +366,7 @@ export function OnboardingPage() {
 
   async function onFinish() {
     await run(async () => {
-      await updateProfile.mutateAsync({ onboarding_done_at: new Date().toISOString() });
+      await updateProfile.mutateAsync({ onboarding_done_at: nowISO() });
       await refreshProfile();
       navigate('/', { replace: true });
     });
@@ -449,7 +451,7 @@ export function OnboardingPage() {
                 <input
                   id="birth"
                   type="date"
-                  max={new Date().toISOString().slice(0, 10)}
+                  max={todayISO()}
                   value={form.birth}
                   onChange={(e) => set('birth', e.target.value)}
                   aria-invalid={errors.birth ? true : undefined}

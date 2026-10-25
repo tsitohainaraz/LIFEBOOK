@@ -4,6 +4,23 @@ import { useAuth, useProfile } from '../contexts/AuthContext';
 import { useUpdateProfile } from '../hooks/useProfile';
 import { supabase } from '../lib/supabase';
 import { birthDateError } from '../utils/options';
+import { DEFAULT_TIME_ZONE, isValidTimeZone } from '../lib/serverTime';
+
+// Fuseaux proposés : Madagascar et la région, puis quelques grandes villes.
+const TIME_ZONES = [
+  ['Indian/Antananarivo', 'Madagascar (UTC+3)'],
+  ['Indian/Comoro', 'Comores (UTC+3)'],
+  ['Indian/Mauritius', 'Maurice (UTC+4)'],
+  ['Indian/Reunion', 'La Réunion (UTC+4)'],
+  ['Africa/Nairobi', 'Nairobi (UTC+3)'],
+  ['Africa/Johannesburg', 'Johannesburg (UTC+2)'],
+  ['Europe/Paris', 'Paris'],
+  ['Europe/London', 'Londres'],
+  ['America/Montreal', 'Montréal'],
+  ['America/New_York', 'New York'],
+  ['Asia/Shanghai', 'Chine'],
+  ['UTC', 'UTC'],
+];
 import { Sheet } from './Sheet';
 import { useToast } from './Toast';
 
@@ -22,6 +39,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
     sleep: String(profile.sleep_hours),
     work: String(profile.work_hours),
     retire: String(profile.retire_age),
+    tz: isValidTimeZone(profile.timezone) ? profile.timezone : DEFAULT_TIME_ZONE,
   });
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -51,6 +69,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
         sleep_hours: sleep,
         work_hours: work,
         retire_age: retire,
+        timezone: f.tz,
       });
       toast('Compte mis à jour');
       onClose();
@@ -110,6 +129,17 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
         <label className="field">
           <span>Âge de la retraite</span>
           <input type="number" min={30} max={90} value={f.retire} onChange={(e) => set('retire', e.target.value)} />
+        </label>
+        <label className="field">
+          <span>Fuseau horaire (pour « aujourd’hui » et « maintenant »)</span>
+          <select value={f.tz} onChange={(e) => set('tz', e.target.value)}>
+            {!TIME_ZONES.some(([z]) => z === f.tz) && <option value={f.tz}>{f.tz}</option>}
+            {TIME_ZONES.map(([z, label]) => (
+              <option key={z} value={z}>
+                {label}
+              </option>
+            ))}
+          </select>
         </label>
         {error && (
           <p className="error-text" role="alert">

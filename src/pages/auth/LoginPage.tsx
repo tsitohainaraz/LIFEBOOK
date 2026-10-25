@@ -7,6 +7,7 @@ import { Logo } from '../../components/Logo';
 import { GoogleLogo } from './GoogleLogo';
 import { readPendingEmail, savePendingEmail } from './pendingEmail';
 import styles from './Auth.module.css';
+import { currentMs } from '../../lib/serverTime';
 
 const GOOGLE_UNAVAILABLE = "La connexion Google n'est pas encore disponible. Utilise ton adresse e-mail.";
 
@@ -71,7 +72,7 @@ export function LoginPage() {
       return;
     }
     savePendingEmail(clean);
-    navigate('/verify', { state: { email: clean, sentAt: Date.now() } });
+    navigate('/verify', { state: { email: clean, sentAt: currentMs() } });
   }
 
   return (

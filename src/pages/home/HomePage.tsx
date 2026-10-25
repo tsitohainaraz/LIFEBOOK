@@ -20,6 +20,7 @@ import { freeMinutesBeforeNext, pickNow, taskEnd, type NowResult } from '../../u
 import { firstFreeSlot } from '../../utils/schedule';
 import type { Category, ProfileRow, TaskRow } from '../../types/database';
 import styles from './Home.module.css';
+import { currentDate, nowISO } from '../../lib/serverTime';
 
 export function HomePage() {
   const profile = useProfile();
@@ -35,11 +36,11 @@ export function HomePage() {
   // L'état « Maintenant » est recalculé toutes les 15 s et à chaque changement de tâche.
   const tick15 = useClock(15_000);
   const tasks = useMemo(() => tasksQ.data ?? [], [tasksQ.data]);
-  const now = useMemo(() => pickNow(tasks, new Date()), [tasks, tick15]);
+  const now = useMemo(() => pickNow(tasks, currentDate()), [tasks, tick15]);
 
   const birth = profile.birth_date;
   const urgentGoals = (goalsQ.data ?? [])
-    .map((g) => ({ g, s: goalStatus(g, new Date()) }))
+    .map((g) => ({ g, s: goalStatus(g, currentDate()) }))
     .filter((o) => o.s === 'late' || o.s === 'urgent' || o.s === 'soon')
     .sort((a, b) => STATUS_ORDER[a.s] - STATUS_ORDER[b.s] || (a.g.deadline ?? '').localeCompare(b.g.deadline ?? ''))
     .slice(0, 3);
@@ -49,7 +50,7 @@ export function HomePage() {
 
   async function finish(task: TaskRow) {
     try {
-      await update.mutateAsync({ id: task.id, values: { done_at: new Date().toISOString() } });
+      await update.mutateAsync({ id: task.id, values: { done_at: nowISO() } });
       toast('Bravo, tâche terminée !');
     } catch {
       toast("Impossible d'enregistrer. Vérifie ta connexion.");
@@ -147,7 +148,7 @@ export function HomePage() {
                   <span>{g.title}</span>
                   {g.deadline && <small>{fmtDate(g.deadline, 'd MMMM yyyy')}</small>}
                 </div>
-                <span className={`st ${s}`}>{goalStatusLabel(g, new Date())}</span>
+                <span className={`st ${s}`}>{goalStatusLabel(g, currentDate())}</span>
               </div>
             ))}
           </div>

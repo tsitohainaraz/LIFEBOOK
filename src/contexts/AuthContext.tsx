@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { setAppTimeZone } from '../lib/serverTime';
 import type { ProfileRow } from '../types/database';
 
 interface AuthState {
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       const p = await loadProfile(user);
+      setAppTimeZone(p.timezone);
       setProfile(p);
       setProfileError(null);
       return p;

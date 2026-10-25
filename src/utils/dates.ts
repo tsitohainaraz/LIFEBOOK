@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { currentDate } from '../lib/serverTime';
 
 // Dates de jour au format AAAA-MM-JJ (date locale), heures au format HH:MM.
 
@@ -15,7 +16,7 @@ export function parseISODate(s: string): Date {
   return new Date(y, (m || 1) - 1, d || 1, 12, 0, 0, 0);
 }
 
-export function todayISO(now: Date = new Date()): string {
+export function todayISO(now: Date = currentDate()): string {
   return toISODate(now);
 }
 
@@ -119,6 +120,6 @@ export function fmtNumber(n: number): string {
     .replace(/[  ]/g, ' ');
 }
 
-export function nowMinutes(now: Date = new Date()): number {
+export function nowMinutes(now: Date = currentDate()): number {
   return now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
 }

@@ -12,6 +12,7 @@ import { ageAt, weeksLivedAndLeft } from '../../utils/life';
 import { lifePeriods, periodState, toggleValue, wheelScore, wheelSummary } from '../../utils/lifeplan';
 import type { GoalDomain, GoalRow } from '../../types/database';
 import styles from './Life.module.css';
+import { currentDate, nowISO } from '../../lib/serverTime';
 
 const SAVE_DELAY = 800;
 
@@ -29,7 +30,7 @@ export function LifePage() {
     return <ErrorState message="Indique ta date de naissance dans ton compte pour voir ta vie en semaines." />;
   }
 
-  const now = new Date();
+  const now = currentDate();
   const exp = profile.life_expectancy;
   const age = ageAt(birth, now);
   const W = weeksLivedAndLeft({ birthDate: birth, lifeExpectancy: exp }, now);
@@ -322,7 +323,7 @@ function Milestones({
                         aria-label={`Étape ${m.title} réalisée`}
                         onClick={() =>
                           updateGoal.mutate(
-                            { id: m.id, values: { done_at: m.done_at ? null : new Date().toISOString() } },
+                            { id: m.id, values: { done_at: m.done_at ? null : nowISO() } },
                             { onSuccess: () => !m.done_at && toast('Une grande étape de franchie !') },
                           )
                         }

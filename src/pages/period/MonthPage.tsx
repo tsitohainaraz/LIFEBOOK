@@ -28,6 +28,7 @@ import { goalStatus } from '../../utils/goals';
 import { habitRate, habitStreak, isPlannedDay } from '../../utils/habits';
 import type { Category, Json, TaskRow } from '../../types/database';
 import styles from './Period.module.css';
+import { currentDate } from '../../lib/serverTime';
 
 const isMonth = (s: string | null): s is string => !!s && /^\d{4}-\d{2}$/.test(s);
 
@@ -187,7 +188,7 @@ export function MonthPage() {
           <div className="label">Objectifs à atteindre ce mois</div>
           <div className="list">
             {deadlines.map((g) => {
-              const s = goalStatus(g, new Date());
+              const s = goalStatus(g, currentDate());
               return (
                 <div className="item" key={g.id}>
                   <div className="t">

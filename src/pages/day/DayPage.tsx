@@ -16,6 +16,7 @@ import { layoutLanes } from '../../utils/timeline';
 import type { TaskRow } from '../../types/database';
 import { CategorySplit } from './CategorySplit';
 import styles from './Day.module.css';
+import { currentDate } from '../../lib/serverTime';
 
 const START = 5;
 const END = 24;
@@ -141,7 +142,7 @@ export function DayPage() {
         <TaskSheet
           task={sheet.task}
           date={date}
-          startTime={sheet.start ?? `${pad(Math.min(22, Math.max(START, new Date().getHours() + 1)))}:00`}
+          startTime={sheet.start ?? `${pad(Math.min(22, Math.max(START, currentDate().getHours() + 1)))}:00`}
           existing={weekTasks}
           onClose={() => setSheet(null)}
         />

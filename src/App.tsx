@@ -6,6 +6,7 @@ import { GuestRoute, OnboardingRoute, ProtectedRoute } from './components/RouteG
 import { LoginPage } from './pages/auth/LoginPage';
 import { VerifyPage } from './pages/auth/VerifyPage';
 import { CallbackPage } from './pages/auth/CallbackPage';
+import { OnboardingPage } from './pages/onboarding/OnboardingPage';
 
 export function App() {
   return (
@@ -18,7 +19,7 @@ export function App() {
           </Route>
           <Route path="/auth/callback" element={<CallbackPage />} />
           <Route element={<OnboardingRoute />}>
-            <Route path="/onboarding" element={<Placeholder title="Profil" />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>

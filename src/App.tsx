@@ -19,6 +19,7 @@ import { BoardsPage } from './features/boards/BoardsPage';
 import { BoardPage } from './features/boards/BoardPage';
 import { CardSheet } from './features/boards/CardSheet';
 import { InviteGate } from './features/boards/InvitePage';
+import { NotificationsPage } from './features/notifications/NotificationsPage';
 
 export function App() {
   return (
@@ -46,6 +47,7 @@ export function App() {
               <Route path="rapport" element={<ReportPage />} />
               <Route path="sante" element={<HealthPage />} />
               <Route path="tableaux" element={<BoardsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               <Route path="tableaux/:id" element={<BoardPage />}>
                 <Route path="carte/:cardId" element={<CardSheet />} />
               </Route>

@@ -49,7 +49,10 @@ export function BoardPage() {
     );
   }
   const data = q.data;
-  const tabs = boardTabs(data, { unread: tab === 'discussion' ? 0 : (unread.data?.get(data.board.id) ?? 0) });
+  const tabs = boardTabs(data, {
+    unread: tab === 'discussion' ? 0 : (unread.data?.get(data.board.id) ?? 0),
+    openReport: search.get('rapport') === '1',
+  });
 
   return (
     <>

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { CardsView } from './CardsView';
 import { ChatView } from '../chat/ChatView';
+import { TeamView } from '../team/TeamReport';
 import type { BoardData } from './useBoards';
-import styles from './Boards.module.css';
 
 export type BoardTabId = 'cartes' | 'discussion' | 'equipe';
 
@@ -13,15 +13,11 @@ export interface BoardTab {
   render: () => ReactNode;
 }
 
-function Waiting({ children }: { children: ReactNode }) {
-  return <div className={`card ${styles.placeholder}`}>{children}</div>;
-}
-
 /** Onglets du tableau : Cartes · Discussion · Équipe du jour. */
-export function boardTabs(data: BoardData, opts: { unread?: number } = {}): BoardTab[] {
+export function boardTabs(data: BoardData, opts: { unread?: number; openReport?: boolean } = {}): BoardTab[] {
   return [
     { id: 'cartes', label: 'Cartes', render: () => <CardsView data={data} /> },
     { id: 'discussion', label: 'Discussion', badge: opts.unread, render: () => <ChatView data={data} /> },
-    { id: 'equipe', label: 'Équipe du jour', render: () => <Waiting>Les rapports du jour de l'équipe arrivent bientôt.</Waiting> },
+    { id: 'equipe', label: 'Équipe du jour', render: () => <TeamView data={data} openReport={!!opts.openReport} /> },
   ];
 }

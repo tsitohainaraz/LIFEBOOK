@@ -118,3 +118,11 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Les @mentions sont enregistrées dans la table `mentions` dès maintenant, pour les messages et les commentaires de carte (la notification est créée par le trigger de la phase 4).
 - Appui long (500 ms) ou clic droit sur un de ses messages : Modifier (messages texte) ou Supprimer. Les observateurs lisent la discussion sans écrire.
 - Compteur de non-lus : messages des autres (hors messages système et supprimés) postérieurs à `message_reads.last_read_at`, rafraîchi toutes les 30 s et à chaque lecture.
+
+### Phase 6 — Rapport d'équipe et notifications
+- « Mon rapport du jour » est dans l'onglet « Équipe du jour » du tableau ; le rappel de 18:00 ouvre directement le formulaire (`?vue=equipe&rapport=1`).
+- Résumé automatique : éléments de checklist cochés par moi aujourd'hui (jour local du profil), cartes que j'ai terminées aujourd'hui (journal `board_activity`, action `card_done`), cartes en cours qui me sont assignées (hors liste « Fait »). « Fait aujourd'hui » est prérempli avec ce résumé et reste modifiable.
+- Un nouvel envoi le même jour met à jour le rapport (upsert) et publie un nouveau message « rapport » dans la discussion.
+- Onglet « Équipe du jour » : une carte par membre (les observateurs ne sont pas listés), avancement moyen des rapports envoyés.
+- Cloche dans l'en-tête, à côté de l'icône Tableaux ; sur les écrans de moins de 370 px, l'icône Tableaux est masquée pour garder des boutons de 44 px (la carte « Mes tableaux » de l'accueil reste disponible).
+- `/notifications` affiche les 100 dernières notifications, groupées par jour ; si les tables ne sont pas encore créées, la cloche n'affiche rien et la page indique que les tableaux ne sont pas activés.

@@ -8,6 +8,7 @@ import { BottomTabs } from './BottomTabs';
 import { Icon } from './Icon';
 import { SummarySheet } from './SummarySheet';
 import { ToastProvider } from './Toast';
+import { Bell } from '../features/notifications/NotificationsPage';
 import styles from './AppShell.module.css';
 
 export function AppShell() {
@@ -25,13 +26,14 @@ export function AppShell() {
           <Link to="/" className={styles.logo}>
             Life<span>Book</span>
           </Link>
-          <div className="row">
+          <div className={styles.actions}>
             {!online && (
               <span className={styles.offline} role="status">
                 Hors ligne
               </span>
             )}
-            <Link to="/tableaux" className={`iconbtn ${styles.sumbtn}`} aria-label="Tableaux">
+            <Bell />
+            <Link to="/tableaux" className={`iconbtn ${styles.sumbtn} ${styles.optional}`} aria-label="Tableaux">
               <Icon name="board" strokeWidth={2} />
             </Link>
             <button

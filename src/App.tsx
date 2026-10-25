@@ -9,6 +9,9 @@ import { CallbackPage } from './pages/auth/CallbackPage';
 import { OnboardingPage } from './pages/onboarding/OnboardingPage';
 import { HomePage } from './pages/home/HomePage';
 import { DayPage } from './pages/day/DayPage';
+import { WeekPage } from './pages/period/WeekPage';
+import { MonthPage } from './pages/period/MonthPage';
+import { YearPage } from './pages/period/YearPage';
 
 export function App() {
   return (
@@ -27,9 +30,9 @@ export function App() {
             <Route element={<AppShell />}>
               <Route index element={<HomePage />} />
               <Route path="jour" element={<DayPage />} />
-              <Route path="semaine" element={<Placeholder title="Ma semaine" />} />
-              <Route path="mois" element={<Placeholder title="Mon mois" />} />
-              <Route path="annee" element={<Placeholder title="Mon année" />} />
+              <Route path="semaine" element={<WeekPage />} />
+              <Route path="mois" element={<MonthPage />} />
+              <Route path="annee" element={<YearPage />} />
               <Route path="vie" element={<Placeholder title="Ma vie" />} />
               <Route path="precedent" element={<Placeholder title="Programme précédent" />} />
               <Route path="rapport" element={<Placeholder title="Mon rapport" />} />

@@ -250,3 +250,102 @@ create policy "ai_messages_insert_own" on public.ai_messages
 drop policy if exists "ai_usage_select_own" on public.ai_usage;
 create policy "ai_usage_select_own" on public.ai_usage for select to authenticated using (user_id = (select auth.uid()));
 revoke insert, update, delete on public.ai_usage from anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Analyses (agrégats des N derniers jours, pour l'utilisateur connecté ; RLS appliquée)
+-- ---------------------------------------------------------------------------
+create or replace function public.get_insights(days int default 28)
+returns jsonb
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $$
+declare
+  uid uuid := auth.uid();
+  tz text;
+  today date;
+  since date;
+  monday date;
+  consent boolean;
+  use_h boolean;
+  result jsonb;
+begin
+  if uid is null then
+    raise exception 'Non connecté';
+  end if;
+  select coalesce(p.timezone, 'Indian/Antananarivo'), p.health_consent_at is not null
+    into tz, consent from public.profiles p where p.id = uid;
+  tz := coalesce(tz, 'Indian/Antananarivo');
+  today := (now() at time zone tz)::date;
+  since := today - greatest(1, least(coalesce(days, 28), 90));
+  monday := today - (extract(isodow from today)::int - 1);
+  select s.use_health into use_h from public.ai_settings s where s.user_id = uid;
+  use_h := coalesce(use_h, true);
+
+  with t as (
+    select date, start_time, done_at, category, title, postponed_count,
+           greatest(5, coalesce(extract(epoch from (end_time - start_time)) / 60, 60))::int as minutes
+    from public.tasks
+    where user_id = uid and date >= since and date < today
+  ),
+  r as (
+    select case
+             when extract(hour from start_time) between 6 and 8 then '06-09'
+             when extract(hour from start_time) between 9 and 11 then '09-12'
+             when extract(hour from start_time) between 12 and 13 then '12-14'
+             when extract(hour from start_time) between 14 and 16 then '14-17'
+             when extract(hour from start_time) between 17 and 19 then '17-20'
+             when extract(hour from start_time) between 20 and 22 then '20-23'
+           end as range, done_at
+    from t where start_time is not null
+  ),
+  sportdays as (
+    select distinct date from public.tasks
+    where user_id = uid and category = 'sport' and done_at is not null and date >= since and date < today
+  ),
+  moods as (
+    select rp.period_start as date, rp.mood, (sd.date is not null) as sport
+    from public.reports rp left join sportdays sd on sd.date = rp.period_start
+    where rp.user_id = uid and rp.period = 'day' and rp.mood is not null and rp.period_start >= since and rp.period_start < today
+  ),
+  hl as (
+    select logged_at, systolic, weight_kg, sleep_h, wellbeing_pct from public.health_logs
+    where user_id = uid and logged_at >= (since::timestamp at time zone tz)
+  ),
+  hfirst as (select * from hl where logged_at < ((since + 7)::timestamp at time zone tz)),
+  hlast as (select * from hl where logged_at >= ((today - 7)::timestamp at time zone tz))
+  select jsonb_build_object(
+    'days', today - since,
+    'ranges', coalesce((select jsonb_agg(jsonb_build_object('range', x.range, 'planned', x.n, 'done', x.d) order by x.range)
+                        from (select range, count(*) as n, count(done_at) as d from r where range is not null group by range) x), '[]'::jsonb),
+    'weekdays', coalesce((select jsonb_agg(jsonb_build_object('dow', x.dow, 'planned', x.n, 'done', x.d) order by x.dow)
+                          from (select extract(isodow from date)::int as dow, count(*) as n, count(done_at) as d from t group by 1) x), '[]'::jsonb),
+    'daily', coalesce((select jsonb_agg(jsonb_build_object('date', x.date, 'planned_min', x.p, 'done_min', x.d) order by x.date)
+                       from (select date, sum(minutes) as p, coalesce(sum(minutes) filter (where done_at is not null), 0) as d
+                             from t where start_time is not null group by date) x), '[]'::jsonb),
+    'postponed', coalesce((select jsonb_agg(jsonb_build_object('title', x.title, 'count', x.c))
+                           from (select title, max(postponed_count) as c from t where postponed_count >= 3 group by title) x), '[]'::jsonb),
+    'categories', coalesce((select jsonb_agg(jsonb_build_object('category', x.category, 'minutes', x.m))
+                            from (select category, sum(minutes) as m from t where start_time is not null group by category) x), '[]'::jsonb),
+    'wheel', coalesce((select lp.wheel from public.life_plan lp where lp.user_id = uid), '{}'::jsonb),
+    'sport_week_min', coalesce((select sum(greatest(5, coalesce(extract(epoch from (k.end_time - k.start_time)) / 60, 60)))::int
+                                from public.tasks k where k.user_id = uid and k.category = 'sport' and k.done_at is not null
+                                  and k.date >= monday and k.date <= today), 0),
+    'health', case when consent and use_h then jsonb_build_object(
+        'systolic', jsonb_build_object('first', (select round(avg(systolic)) from hfirst), 'last', (select round(avg(systolic)) from hlast)),
+        'weight_kg', jsonb_build_object('first', (select round(avg(weight_kg), 1) from hfirst), 'last', (select round(avg(weight_kg), 1) from hlast)),
+        'sleep_h', jsonb_build_object('first', (select round(avg(sleep_h), 1) from hfirst), 'last', (select round(avg(sleep_h), 1) from hlast)),
+        'wellbeing_pct', jsonb_build_object('first', (select round(avg(wellbeing_pct)) from hfirst), 'last', (select round(avg(wellbeing_pct)) from hlast))
+      ) else null end,
+    'mood', jsonb_build_object(
+      'with_sport', jsonb_build_object('days', (select count(*) from moods where sport), 'avg', (select round(avg(mood), 2) from moods where sport)),
+      'without_sport', jsonb_build_object('days', (select count(*) from moods where not sport), 'avg', (select round(avg(mood), 2) from moods where not sport))
+    )
+  ) into result;
+  return result;
+end;
+$$;
+
+revoke all on function public.get_insights(int) from public, anon;
+grant execute on function public.get_insights(int) to authenticated;

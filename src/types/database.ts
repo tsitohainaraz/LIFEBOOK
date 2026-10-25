@@ -520,6 +520,7 @@ export type Database = {
       board_storage_bytes: { Args: { b: string }; Returns: number };
       ai_quota: { Args: Record<string, never>; Returns: AiQuota[] };
       ai_take_quota: { Args: Record<string, never>; Returns: boolean };
+      get_insights: { Args: { days?: number }; Returns: Json };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

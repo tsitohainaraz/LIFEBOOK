@@ -77,3 +77,13 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Les dates des éléments planifiés sont en heure murale du fuseau du profil, comme `currentDate()`.
 - Le bloc « À suivre » est un emplacement `footer` ajouté au composant `NowRing` existant.
 - Le test de `formatRelative` et de `phraseUpcoming` est dans `src/utils/upcoming.test.ts` (les fonctions sont dans `src/utils/now.ts`, comme demandé).
+
+### Phase 2 — Base de données des tableaux (`0002_tableaux.sql`)
+- Fonctions d'aide supplémentaires (security definer, `search_path = ''`) : `can_edit_board` (owner ou member), `is_user_board_member`, `card_board_id`, `label_board_id`, `shares_board_with`. Elles évitent la récursion des politiques et les jointures répétées.
+- Un trigger empêche de mettre une carte dans la liste d'un autre tableau.
+- Création de commentaires : réservée aux rôles owner et member (les observateurs ne modifient rien, comme pour le reste du tableau).
+- `get_invite_preview` renvoie aussi la couleur du tableau et l'état de l'invitation (`ok`, `expired`, `used`) pour afficher un message clair, sans autre donnée personnelle.
+- Jeton d'invitation : `translate(encode(extensions.gen_random_bytes(24), 'base64'), '+/=', '-_')` (pgcrypto est dans le schéma `extensions` sur Supabase).
+- Les avatars stockés dans le bucket privé `avatars` deviennent lisibles par les personnes qui partagent un tableau (politique `avatars_select_board_members`). Aucune autre colonne de `profiles` n'est exposée : la vue `member_profiles` ne contient que id, prénom, nom et avatar.
+- Supprimer son compte supprime les tableaux dont on est owner (cascade sur `boards.owner_id`).
+- Le SQL a été vérifié dans PGlite (PostgreSQL embarqué) avec un socle qui imite Supabase : 0001 et 0002 appliqués deux fois de suite sans erreur, et 31 contrôles d'accès avec trois utilisateurs (owner, membre, observateur, non-membre).

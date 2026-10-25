@@ -1,0 +1,31 @@
+.prio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 10px 0 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.n {
+  font-family: var(--mono);
+  color: var(--lime);
+  font-weight: 700;
+  width: 14px;
+}
+.prio input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  min-height: 46px;
+  padding: 0;
+}
+.prio input:focus {
+  box-shadow: none;
+}
+.done input {
+  text-decoration: line-through;
+  color: var(--muted);
+}

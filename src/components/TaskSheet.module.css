@@ -1,0 +1,66 @@
+.cats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 2px;
+  min-height: 56px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ink);
+}
+.cat i {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--c);
+}
+.cat[aria-checked='true'] {
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 18%, var(--surface-2));
+}
+.durs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.durs button {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 13px;
+  font-family: var(--mono);
+}
+.warn {
+  font-size: 12px;
+  color: var(--urgent);
+  margin: 0;
+}
+.err {
+  font-size: 12px;
+  color: var(--late);
+  margin: 0;
+}
+.btns {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+.btns :global(.btn) {
+  min-height: 52px;
+}
+.del {
+  color: var(--late);
+  background: none;
+}

@@ -1,0 +1,338 @@
+/* Planifier ma journée (maquette A) */
+.strip {
+  display: grid;
+  grid-template-columns: auto repeat(7, minmax(0, 1fr)) auto;
+  gap: 2px;
+  align-items: center;
+  padding-top: 12px;
+}
+.nav {
+  width: 32px;
+  height: 44px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 20px;
+  padding: 0;
+}
+.d {
+  border: 1px solid transparent;
+  background: none;
+  border-radius: 14px;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 58px;
+  min-width: 0;
+}
+.d small {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.d b {
+  font-family: var(--mono);
+  font-size: 17px;
+}
+.d i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+.d.has i {
+  background: var(--muted);
+}
+.d.isToday b {
+  color: var(--lime);
+}
+.d[aria-pressed='true'] {
+  background: var(--lime);
+  border-color: var(--lime);
+}
+.d[aria-pressed='true'] small,
+.d[aria-pressed='true'] b {
+  color: var(--lime-ink);
+}
+.d[aria-pressed='true'] i {
+  background: var(--lime-ink);
+}
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.title .k {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--lime);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.title h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.today {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  flex: none;
+}
+.intent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 4px 4px 4px 14px;
+}
+.intent svg {
+  width: 18px;
+  height: 18px;
+  color: var(--lime);
+  flex: none;
+}
+.intent input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  min-height: 44px;
+  padding: 0;
+}
+.intent input:focus {
+  box-shadow: none;
+}
+.split {
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+  display: flex;
+  background: var(--surface-2);
+}
+.split i {
+  height: 100%;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend span::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--c);
+}
+.tlCard {
+  padding: 14px 10px 14px 6px;
+}
+.tlHead {
+  padding: 0 4px 0 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.tlHead h2 {
+  font-size: 15px;
+}
+.tlHead small {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+}
+.tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: 46px 1fr;
+}
+.hours {
+  position: relative;
+}
+.hours span {
+  position: absolute;
+  left: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+.lane {
+  position: relative;
+  border-left: 1px solid var(--line);
+}
+.hl {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--line);
+}
+.slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border: none;
+  background: none;
+  padding: 0;
+}
+.slot:hover,
+.slot:focus-visible {
+  background: rgba(198, 244, 50, 0.04);
+}
+.blk {
+  position: absolute;
+  border-radius: 12px;
+  padding: 8px 34px 8px 10px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  background: color-mix(in srgb, var(--c) 16%, var(--surface));
+  border-left: 4px solid var(--c);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 26px;
+  color: var(--ink);
+}
+.blk b {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.blk small {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.cat {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--c);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.short {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 34px 2px 10px;
+}
+.done {
+  opacity: 0.55;
+}
+.done b {
+  text-decoration: line-through;
+}
+.ck {
+  position: absolute;
+  right: 2px;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+.ck span {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--c);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--lime-ink);
+}
+.ckDone span {
+  background: var(--c);
+}
+.now {
+  position: absolute;
+  left: -5px;
+  right: 0;
+  height: 2px;
+  background: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
+  z-index: 3;
+  pointer-events: none;
+}
+.now::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lime);
+}
+.now span {
+  position: absolute;
+  right: 0;
+  top: -20px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--lime);
+  font-weight: 700;
+}
+.untimed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 4px 10px 10px;
+}
+.fab {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right, 0px));
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  z-index: 25;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: none;
+  background: var(--lime);
+  color: var(--lime-ink);
+  box-shadow: 0 0 30px rgba(198, 244, 50, 0.45);
+  display: grid;
+  place-items: center;
+}
+.fab svg {
+  width: 28px;
+  height: 28px;
+}
+@media (min-width: 520px) {
+  .fab {
+    right: calc(50vw - 240px + 18px);
+  }
+}

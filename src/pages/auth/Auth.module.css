@@ -161,15 +161,37 @@
   display: grid;
   place-items: center;
 }
-.orb::before {
+/* Étoile filante : une tête lumineuse et sa traînée font le tour du logo. */
+.comet {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+.comet::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent 0 55%, rgba(198, 244, 50, 0.9) 75%, transparent 76%);
+  background: conic-gradient(from 0deg, transparent 0 62%, rgba(198, 244, 50, 0.15) 75%, rgba(198, 244, 50, 0.95) 99.6%, transparent 100%);
   -webkit-mask: radial-gradient(circle, transparent 62%, #000 63%, #000 66%, transparent 67%);
   mask: radial-gradient(circle, transparent 62%, #000 63%, #000 66%, transparent 67%);
-  animation: spin 2.4s linear infinite;
+}
+.star {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  background:
+    radial-gradient(circle, #fff 0 2.5px, transparent 3.5px),
+    linear-gradient(90deg, transparent 45%, rgba(255, 255, 255, 0.95) 50%, transparent 55%) center / 100% 2px no-repeat,
+    linear-gradient(0deg, transparent 45%, rgba(255, 255, 255, 0.95) 50%, transparent 55%) center / 2px 100% no-repeat;
+  filter: drop-shadow(0 0 4px var(--lime)) drop-shadow(0 0 10px var(--lime));
+  animation: twinkle 0.45s ease-in-out infinite alternate;
 }
 .orb::after {
   content: '';
@@ -281,6 +303,16 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+@keyframes twinkle {
+  from {
+    transform: scale(0.8) rotate(0deg);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.15) rotate(45deg);
+    opacity: 1;
   }
 }
 @keyframes breathe {

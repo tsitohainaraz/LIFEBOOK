@@ -120,6 +120,9 @@ export function VerifyPage() {
         <div className={styles.verify}>
           <div className={styles.orb} aria-hidden="true">
             <Logo size={112} />
+            <span className={styles.comet}>
+              <span className={styles.star} />
+            </span>
             <span className={styles.dot} />
             <span className={`${styles.dot} ${styles.d2}`} />
             <span className={`${styles.dot} ${styles.d3}`} />

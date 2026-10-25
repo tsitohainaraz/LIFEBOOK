@@ -69,6 +69,12 @@
 - [ ] **V1** Programme du jour, avec l'activité en cours mise en évidence.
 - [ ] **V1** Bouton **Mon résumé** en haut à droite : semaines restantes à dormir, à travailler, temps libre restant, état de santé en %, objectifs atteints et à atteindre.
 - [ ] **V1** Objectifs urgents et lien vers le programme précédent.
+- [x] **V1** Bloc **« À suivre »** sous les boutons du cercle Maintenant :
+  - phrase du prochain élément (« Dans 2 h 15, tu dois réviser l'examen selon ton plan »), point de la couleur de la catégorie, horaire, nom du tableau pour une carte ;
+  - les 2 éléments suivants en petit (« dans 4 h · Appeler maman ») ;
+  - s'il n'y a plus rien aujourd'hui, le premier élément de demain ; sinon « Rien de prévu pour l'instant » et « Planifier demain » ;
+  - mis à jour toutes les 30 s, en orange avec un point qui clignote à 15 min ou moins ; un appui ouvre la Journée (ou la carte).
+- [x] **V1** Bloc « Mes cartes urgentes » : cartes de tableaux en retard ou dues dans les 48 h.
 
 ## 4. Planifier ma journée
 
@@ -276,3 +282,22 @@
 5. Santé : journal et recommandations.
 6. Notifications.
 7. Hors ligne, statistiques, vie spirituelle, suggestions intelligentes.
+
+## 26. Tableaux d'équipe (« super Trello »)
+
+- [x] **V1** Mes tableaux (`/tableaux`) : couleur, nombre de cartes, cartes en retard, membres, messages non lus ; création avec titre, couleur et objectif lié.
+- [x] **V1** Tableau (`/tableaux/:id`) : onglets **Cartes**, **Discussion**, **Équipe du jour** ; titre modifiable par le propriétaire ; étiquettes ; archiver ou supprimer.
+- [x] **V1** Listes « À faire », « En cours », « Fait » créées automatiquement ; une liste par écran, pastilles pour aller à une liste, ajout de listes.
+- [x] **V1** Cartes : titre, description, membres assignés, échéance (date et heure), étiquettes, checklist avec progression, fichiers, commentaires avec @mention, historique ; « Marquer comme fait », « Archiver », « Déplacer vers… ».
+- [x] **V1** Glisser-déposer des cartes au doigt et à la souris, avec passage à la liste voisine près du bord de l'écran.
+- [x] **V1** « Planifier dans ma journée » : crée une tâche liée à la carte dans le premier créneau libre (06:00 à 22:00).
+- [x] **V1** Rôles : propriétaire, membre, observateur (lecture seule) ; invitation par lien (7 jours, une personne), partage natif ou copie ; quitter le tableau.
+- [x] **V1** Temps réel : cartes, listes, checklists, commentaires et membres ; membres connectés visibles.
+- [x] **V1** Fichiers : photos (réduites à 1600 px), vidéos (50 Mo max, miniature), PDF et documents Office (20 Mo max) ; progression et annulation ; visionneuse plein écran ; espace utilisé pour le propriétaire.
+- [x] **V1** Discussion : bulles, réponses, fichiers, @mentions, modification et suppression de ses messages, chargement par 30, messages système, compteur de non-lus.
+- [x] **V1** Rapport du jour d'équipe : résumé automatique (éléments cochés, cartes terminées, cartes en cours), avancement du tableau, Fait / Bloqué par / Demain, photos ; publié dans la discussion ; onglet « Équipe du jour » par date.
+- [x] **V1** Notifications : carte assignée, commentaire, message (une seule notification par tableau), mention, nouveau membre, rapport envoyé, échéance demain, échéance dépassée, rappel du rapport à 18:00 (heure locale) ; cloche et page `/notifications`.
+- [x] **V1** Liens avec LifeBook : mes cartes dans la Journée, la Semaine, le Mois, « À suivre » et le cercle Maintenant ; tâche liée à une carte ; progression des objectifs reliés à un tableau.
+- [ ] **V2** Notifications push sur le téléphone (étape 10 : Web Push et Edge Function, colonne `notifications.pushed_at` prévue).
+
+**Tables :** `boards`, `board_members`, `board_invites`, `lists`, `cards`, `card_members`, `board_labels`, `card_labels`, `checklist_items`, `card_comments`, `board_activity` (0002_tableaux.sql) ; `attachments`, `messages`, `message_reads`, `mentions`, `daily_reports`, `notifications` (0003_equipe.sql) ; colonne `tasks.card_id` ; bucket privé `board-files`.

@@ -298,6 +298,84 @@ export type InvitePreview = {
   status: 'ok' | 'expired' | 'used';
 };
 
+// ---------------------------------------------------------------------------
+// Équipe (0003_equipe.sql)
+// ---------------------------------------------------------------------------
+export type DailyReportRow = {
+  id: string;
+  board_id: string;
+  user_id: string;
+  date: string;
+  auto_summary: { [key: string]: Json | undefined };
+  progress_pct: number | null;
+  done_text: string | null;
+  blockers_text: string | null;
+  tomorrow_text: string | null;
+  posted_at: string | null;
+  created_at: string;
+};
+
+export type MessageKind = 'text' | 'report' | 'system';
+
+export type MessageRow = {
+  id: string;
+  board_id: string;
+  user_id: string | null;
+  body: string;
+  kind: MessageKind;
+  reply_to: string | null;
+  report_id: string | null;
+  created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+};
+
+export type MessageReadRow = { board_id: string; user_id: string; last_read_at: string };
+
+export type AttachmentRow = {
+  id: string;
+  board_id: string;
+  card_id: string | null;
+  message_id: string | null;
+  report_id: string | null;
+  user_id: string;
+  path: string;
+  mime: string | null;
+  size_bytes: number;
+  width: number | null;
+  height: number | null;
+  duration_s: number | null;
+  thumb_path: string | null;
+  created_at: string;
+};
+
+export type MentionRow = {
+  id: string;
+  user_id: string;
+  board_id: string;
+  card_id: string | null;
+  comment_id: string | null;
+  message_id: string | null;
+  created_at: string;
+};
+
+export type NotificationRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  board_id: string | null;
+  card_id: string | null;
+  message_id: string | null;
+  actor_id: string | null;
+  title: string;
+  body: string;
+  link: string;
+  payload: { [key: string]: Json | undefined };
+  read_at: string | null;
+  pushed_at: string | null;
+  created_at: string;
+};
+
 export type BucketItemRow = Timestamps & {
   id: string;
   user_id: string;
@@ -343,6 +421,12 @@ export type Database = {
       checklist_items: Table<ChecklistItemRow, MakeInsert<ChecklistItemRow, 'card_id' | 'text'>>;
       card_comments: Table<CardCommentRow, MakeInsert<CardCommentRow, 'card_id' | 'body'>>;
       board_activity: Table<BoardActivityRow, MakeInsert<BoardActivityRow, 'board_id' | 'action'>>;
+      daily_reports: Table<DailyReportRow, MakeInsert<DailyReportRow, 'board_id' | 'date'>>;
+      messages: Table<MessageRow, MakeInsert<MessageRow, 'board_id'>>;
+      message_reads: Table<MessageReadRow, MakeInsert<MessageReadRow, 'board_id'>>;
+      attachments: Table<AttachmentRow, MakeInsert<AttachmentRow, 'board_id' | 'path'>>;
+      mentions: Table<MentionRow, MakeInsert<MentionRow, 'user_id' | 'board_id'>>;
+      notifications: Table<NotificationRow, MakeInsert<NotificationRow, 'user_id' | 'type' | 'title'>>;
     };
     Views: {
       member_profiles: { Row: MemberProfileRow; Relationships: [] };
@@ -354,6 +438,7 @@ export type Database = {
       create_invite: { Args: { b: string; r: Exclude<BoardRole, 'owner'> }; Returns: string };
       accept_invite: { Args: { t: string }; Returns: string };
       get_invite_preview: { Args: { t: string }; Returns: InvitePreview[] };
+      board_storage_bytes: { Args: { b: string }; Returns: number };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

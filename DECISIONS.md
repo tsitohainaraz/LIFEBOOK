@@ -98,3 +98,12 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - « Planifier dans ma journée » crée une tâche de catégorie « Travail » liée à la carte (`tasks.card_id`).
 - Invitation : le jeton est gardé dans `sessionStorage` ; après la connexion et la fin du profil, la garde `ProtectedRoute` ramène sur `/invitation/:token`. « Plus tard » oublie l'invitation.
 - Temps réel : un canal par tableau ; `checklist_items` et `card_comments` n'ont pas de `board_id`, ils sont écoutés sans filtre (la RLS ne transmet que les lignes visibles) et triés côté application.
+
+### Phase 4 — Base de données équipe (`0003_equipe.sql`)
+- Suppression d'un fichier du bucket `board-files` : autorisée à son auteur (retrouvé par la table `attachments`, pour ne pas dépendre des colonnes internes `owner`/`owner_id` de `storage.objects`, qui varient selon les versions) ou à l'owner du tableau.
+- `attachments.path` doit commencer par le dossier du tableau ; il est unique.
+- Messages : écrits par les rôles owner et member (les observateurs lisent seulement) ; les messages système ne sont créés que par les triggers ; un message supprimé garde sa ligne avec `deleted_at` (« Message supprimé »).
+- Notifications : lecture et mise à jour de `read_at` seulement, par le destinataire (droit au niveau de la colonne) ; aucune insertion depuis l'application.
+- Notification de message : la notification non lue existante est mise à jour (dernier message, compteur `payload.count`) au lieu d'en créer une autre.
+- Rappels horaires (`run_hourly_notifications`, pg_cron `0 * * * *`) : « échéance demain », « échéance dépassée » (une fois par carte et par jour, dans le fuseau de chaque personne) et, à 18:00 heure locale, « Envoie ton rapport du jour » pour les owners et members des tableaux actifs ces 7 derniers jours (activité ou messages) qui n'ont pas envoyé leur rapport.
+- Vérifié dans PGlite avec un faux pg_cron : 0001 à 0003 appliqués deux fois, 62 contrôles d'accès et de notifications.

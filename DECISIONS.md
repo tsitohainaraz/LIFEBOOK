@@ -134,3 +134,16 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Cocher une tâche liée à une carte propose « Marquer aussi la carte comme faite ? » sur l'accueil, la Journée, la Semaine et le Mois.
 - Progression d'un objectif relié à un tableau : les cartes du tableau (non archivées) comptent comme des éléments, faites si terminées. Elle est affichée dans « Mon année », seul écran qui montre la progression des objectifs.
 - Accueil : « Mes cartes urgentes » = cartes en retard ou dues dans les 48 h, 5 au maximum.
+
+## Assistante de planification (branche feature/assistante)
+
+### Constats de l'inspection
+- La maquette `maquettes/G- Planification guidée LifeBook.html` citée par PROMPT_ASSISTANTE.md n'existe pas (ni dans le dossier, ni ailleurs sur le disque). La planification guidée reprend le design des maquettes existantes : barre de progression et boutons Retour / Continuer de la maquette 4, cartes et pastilles de la maquette 5.
+- Il n'existe pas de table `planning_sessions`, de route `/planifier-demain`, de « rendez-vous de planification » ni d'horaires de prière dans le code. Les éléments correspondants sont adaptés (voir les phases 2, 5 et 6).
+- Migration : `0004_assistante.sql` (0001 à 0003 existent déjà).
+
+### Phase 1 — Base de données (`0004_assistante.sql`)
+- `ai_usage` n'est jamais écrit par l'application : le quota est consommé par la fonction `ai_take_quota()` (security definer), qui compare au plafond de `plan_limits` ; `ai_quota()` donne l'offre, le plafond, l'utilisé et le restant. Le jour compté est le jour local du fuseau du profil.
+- Offre : `profiles.plan` et `plan_until` ; le trigger `protect_profile_plan` refuse leur modification par les rôles `authenticated` et `anon` (une insertion par l'application est ramenée à `free`). Le rôle service et le SQL Editor peuvent les changer. Une offre premium dont `plan_until` est passé compte comme gratuite.
+- Un message ne peut être ajouté qu'à une de ses propres conversations.
+- Vérifié dans PGlite : 0001 à 0004 appliqués deux fois, contrôles du quota (30 puis refus, impossible de remettre le compteur à zéro), de l'offre et de la RLS.

@@ -22,6 +22,9 @@ import { firstFreeSlot } from '../../utils/schedule';
 import type { Category, ProfileRow, TaskRow } from '../../types/database';
 import styles from './Home.module.css';
 import { currentDate, nowISO } from '../../lib/serverTime';
+import { cardAsTask, isCardTask, urgentCards, useLinkedCards, useMyCards } from '../../features/boards/myCards';
+import { markCardDone, useCardDonePrompt } from '../../features/boards/CardDonePrompt';
+import { cardDueStatus } from '../../features/boards/boardUtils';
 
 export function HomePage() {
   const profile = useProfile();
@@ -39,8 +42,26 @@ export function HomePage() {
   const tick15 = useClock(15_000);
   const allTasks = useMemo(() => tasksQ.data ?? [], [tasksQ.data]);
   const tasks = useMemo(() => allTasks.filter((t) => t.date === today), [allTasks, today]);
-  const planned = useMemo(() => collectPlannedItems({ tasks: allTasks }), [allTasks]);
-  const now = useMemo(() => pickNow(tasks, currentDate()), [tasks, tick15]);
+  // Cartes qui me sont assignées : en retard, aujourd'hui, demain et après-demain.
+  const myCardsQ = useMyCards(addDaysISO(today, 2));
+  const myCards = useMemo(() => myCardsQ.data ?? [], [myCardsQ.data]);
+  const linked = useLinkedCards(allTasks.map((t) => t.card_id).filter((x): x is string => !!x)).data;
+  const cardPrompt = useCardDonePrompt();
+  const planned = useMemo(
+    () =>
+      collectPlannedItems({
+        tasks: allTasks,
+        cards: myCards.map((c) => ({ ...c, boardName: c.boardTitle })),
+      }),
+    [allTasks, myCards],
+  );
+  // Le cercle Maintenant tient compte des cartes du jour qui ont une heure.
+  const nowTasks = useMemo(
+    () => [...tasks, ...myCards.filter((c) => c.due_date === today && c.due_time).map(cardAsTask)],
+    [tasks, myCards, today],
+  );
+  const now = useMemo(() => pickNow(nowTasks, currentDate()), [nowTasks, tick15]);
+  const urgentCardList = urgentCards(myCards, today).slice(0, 5);
 
   const birth = profile.birth_date;
   const urgentGoals = (goalsQ.data ?? [])
@@ -54,8 +75,15 @@ export function HomePage() {
 
   async function finish(task: TaskRow) {
     try {
+      if (isCardTask(task) && task.card_id) {
+        await markCardDone(task.card_id);
+        void myCardsQ.refetch();
+        toast('Bravo, carte terminée !');
+        return;
+      }
       await update.mutateAsync({ id: task.id, values: { done_at: nowISO() } });
       toast('Bravo, tâche terminée !');
+      if (task.card_id && !linked?.get(task.card_id)?.done_at) cardPrompt.ask(task, linked?.get(task.card_id)?.title);
     } catch {
       toast("Impossible d'enregistrer. Vérifie ta connexion.");
     }
@@ -81,7 +109,7 @@ export function HomePage() {
           result={now}
           busy={update.isPending}
           onFinish={(t) => void finish(t)}
-          onLater={setLaterTask}
+          onLater={(t) => (isCardTask(t) && t.card_id ? navigate(`/tableaux/${myCards.find((c) => c.id === t.card_id)?.board_id}/carte/${t.card_id}`) : setLaterTask(t))}
           onPlan={() => navigate('/jour')}
           onReport={() => navigate('/rapport')}
           planned={planned}
@@ -108,7 +136,10 @@ export function HomePage() {
                   className="check"
                   aria-pressed={!!t.done_at}
                   aria-label={`Marquer ${t.title} comme faite`}
-                  onClick={() => void toggle.toggle(t)}
+                  onClick={() => {
+                    void toggle.toggle(t);
+                    if (!t.done_at && t.card_id && !linked?.get(t.card_id)?.done_at) cardPrompt.ask(t, linked?.get(t.card_id)?.title);
+                  }}
                 >
                   {t.done_at ? '✓' : ''}
                 </button>
@@ -118,6 +149,7 @@ export function HomePage() {
                 </span>
                 <div className="t">
                   <span>{t.title}</span>
+                  {t.card_id && linked?.get(t.card_id) && <small>🗂 {linked.get(t.card_id)?.title}</small>}
                   {cur && <small style={{ color: 'var(--lime)' }}>en cours</small>}
                 </div>
               </div>
@@ -133,6 +165,29 @@ export function HomePage() {
           </Link>
         </div>
       </div>
+
+      {urgentCardList.length > 0 && (
+        <div className="card">
+          <div className="label">Mes cartes urgentes</div>
+          <div className="list">
+            {urgentCardList.map((c) => {
+              const st = cardDueStatus(c, today);
+              return (
+                <Link key={c.id} to={`/tableaux/${c.board_id}/carte/${c.id}`} className="item" style={{ color: 'var(--ink)', textDecoration: 'none', borderLeft: `4px solid ${c.boardColor}` }}>
+                  <div className="t">
+                    <span>{c.title}</span>
+                    <small>🗂 {c.boardTitle}</small>
+                  </div>
+                  <span className={`st ${st === 'late' ? 'late' : st === 'today' ? 'urgent' : 'soon'}`}>
+                    {st === 'late' ? 'En retard' : st === 'today' ? "Aujourd'hui" : fmtDate(c.due_date ?? today, 'EEE d')}
+                    {c.due_time ? ` ${hhmm(c.due_time)}` : ''}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <Link to="/tableaux" className="linkcard">
         <Icon name="board" />
@@ -170,6 +225,7 @@ export function HomePage() {
       )}
 
       {laterTask && <LaterSheet task={laterTask} onClose={() => setLaterTask(null)} />}
+      {cardPrompt.element}
       {recoOpen && <RecoSheet now={now} tasks={tasks} onClose={() => setRecoOpen(false)} />}
     </>
   );

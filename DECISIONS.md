@@ -126,3 +126,11 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Onglet « Équipe du jour » : une carte par membre (les observateurs ne sont pas listés), avancement moyen des rapports envoyés.
 - Cloche dans l'en-tête, à côté de l'icône Tableaux ; sur les écrans de moins de 370 px, l'icône Tableaux est masquée pour garder des boutons de 44 px (la carte « Mes tableaux » de l'accueil reste disponible).
 - `/notifications` affiche les 100 dernières notifications, groupées par jour ; si les tables ne sont pas encore créées, la cloche n'affiche rien et la page indique que les tableaux ne sont pas activés.
+
+### Phase 7 — Liens entre les tableaux et LifeBook
+- `useMyCards` (`src/features/boards/myCards.ts`) : cartes **qui me sont assignées**, non archivées, avec une échéance ; si les tables n'existent pas encore, la liste est vide et les écrans fonctionnent comme avant.
+- Une carte avec une heure devient une « tâche » virtuelle d'1 h (identifiant `card:<id>`, catégorie « Travail ») pour la frise, la vue semaine, le cercle Maintenant et « À suivre ». Ces blocs prennent la couleur du tableau ; un appui ouvre la carte.
+- Dans le cercle Maintenant, « Tâche terminée » sur une carte la termine (et la range dans « Fait ») ; « Faire plus tard » ouvre la carte (on ne déplace pas l'échéance d'une carte d'équipe depuis l'accueil).
+- Cocher une tâche liée à une carte propose « Marquer aussi la carte comme faite ? » sur l'accueil, la Journée, la Semaine et le Mois.
+- Progression d'un objectif relié à un tableau : les cartes du tableau (non archivées) comptent comme des éléments, faites si terminées. Elle est affichée dans « Mon année », seul écran qui montre la progression des objectifs.
+- Accueil : « Mes cartes urgentes » = cartes en retard ou dues dans les 48 h, 5 au maximum.

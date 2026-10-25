@@ -15,6 +15,9 @@ import { taskEnd } from '../../utils/now';
 import { layoutLanes } from '../../utils/timeline';
 import type { TaskRow } from '../../types/database';
 import { CategorySplit } from './CategorySplit';
+import { useNavigate } from 'react-router-dom';
+import { cardAsTask, isCardTask, useLinkedCards, useMyCards, type MyCard } from '../../features/boards/myCards';
+import { markCardDone, useCardDonePrompt } from '../../features/boards/CardDonePrompt';
 import styles from './Day.module.css';
 import { currentDate } from '../../lib/serverTime';
 
@@ -31,6 +34,8 @@ export function DayPage() {
   const weekStart = mondayOf(date);
   const weekEnd = addDaysISO(weekStart, 6);
   const tasksQ = useTasksRange(weekStart, weekEnd);
+  // Cartes qui me sont assignées, dues cette semaine (affichées le jour de leur échéance).
+  const weekCards = useMyCards(weekEnd, weekStart).data ?? [];
   const [sheet, setSheet] = useState<{ task?: TaskRow; start?: string } | null>(null);
   const reportOpen = params.get('rapport') === '1';
 
@@ -126,6 +131,7 @@ export function DayPage() {
             isToday={date === today}
             timed={timed}
             untimed={untimed}
+            cards={weekCards.filter((c) => c.due_date === date)}
             onAdd={(start) => setSheet({ start })}
             onEdit={(task) => setSheet({ task })}
           />
@@ -206,6 +212,7 @@ function Timeline({
   untimed,
   onAdd,
   onEdit,
+  cards,
 }: {
   date: string;
   isToday: boolean;
@@ -213,14 +220,23 @@ function Timeline({
   untimed: TaskRow[];
   onAdd: (start: string) => void;
   onEdit: (t: TaskRow) => void;
+  cards: MyCard[];
 }) {
   const toggle = useToggleTask();
   const toast = useToast();
+  const navigate = useNavigate();
+  const prompt = useCardDonePrompt();
+  const linked = useLinkedCards([...timed, ...untimed].map((t) => t.card_id).filter((x): x is string => !!x)).data;
+  const cardById = new Map(cards.map((c) => [c.id, c]));
+  const cardTasks = cards.filter((c) => c.due_time).map(cardAsTask);
+  const dueRow = cards.filter((c) => !c.due_time);
+  const openCard = (c: MyCard) => navigate(`/tableaux/${c.board_id}/carte/${c.id}`);
   const clock = useClock(60_000);
   const nowRef = useRef<HTMLDivElement>(null);
   const height = (END - START) * HOUR;
-  const placed = layoutLanes(timed.map((t) => ({ id: t.id, start: toMin(t.start_time), end: taskEnd(t) })));
-  const byId = new Map(timed.map((t) => [t.id, t]));
+  const allTimed = [...timed, ...cardTasks];
+  const placed = layoutLanes(allTimed.map((t) => ({ id: t.id, start: toMin(t.start_time), end: taskEnd(t) })));
+  const byId = new Map(allTimed.map((t) => [t.id, t]));
   const nowMin = clock.getHours() * 60 + clock.getMinutes();
 
   // Centre la frise sur l'heure actuelle à l'ouverture.
@@ -229,9 +245,22 @@ function Timeline({
   }, [isToday, date]);
 
   async function onToggle(t: TaskRow) {
+    if (isCardTask(t)) {
+      const c = t.card_id ? cardById.get(t.card_id) : undefined;
+      if (!c) return;
+      if (c.done_at) return openCard(c);
+      try {
+        await markCardDone(c.id);
+        toast('Bravo, carte terminée !');
+      } catch {
+        toast("Non enregistré : vérifie ta connexion.");
+      }
+      return;
+    }
     try {
       await toggle.toggle(t);
       if (!t.done_at) toast("Bravo, c'est fait");
+      if (!t.done_at && t.card_id && !linked?.get(t.card_id)?.done_at) prompt.ask(t, linked?.get(t.card_id)?.title);
     } catch {
       toast("Non enregistré : vérifie ta connexion.");
     }
@@ -243,6 +272,26 @@ function Timeline({
         <h2>Mon emploi du temps</h2>
         <small>touche une heure libre pour ajouter</small>
       </div>
+      {dueRow.length > 0 && (
+        <div className={styles.untimed}>
+          <span className="label">Échéances du jour</span>
+          {dueRow.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`item ${c.done_at ? 'done' : ''}`}
+              style={{ borderLeft: `4px solid ${c.boardColor}`, color: 'var(--ink)', textAlign: 'left' }}
+              onClick={() => openCard(c)}
+            >
+              <span aria-hidden="true">🗂</span>
+              <span className="t">
+                <span>{c.title}</span>
+                <small>{c.boardTitle}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       {untimed.length > 0 && (
         <div className={styles.untimed}>
           {untimed.map((t) => (
@@ -252,13 +301,16 @@ function Timeline({
               </button>
               <button type="button" className="t" style={{ background: 'none', border: 'none', textAlign: 'left', padding: 0 }} onClick={() => onEdit(t)}>
                 <span>{t.title}</span>
-                <small>sans heure · {CATEGORY_LABEL[t.category]}</small>
+                <small>
+                  sans heure · {CATEGORY_LABEL[t.category]}
+                  {t.card_id && linked?.get(t.card_id) ? ` · 🗂 ${linked.get(t.card_id)?.title}` : ''}
+                </small>
               </button>
             </div>
           ))}
         </div>
       )}
-      {timed.length === 0 && untimed.length === 0 && (
+      {timed.length === 0 && untimed.length === 0 && cards.length === 0 && (
         <p className="empty">Aucune activité ce jour-là. Touche une heure ou le bouton + pour ajouter la première.</p>
       )}
       <div className={styles.tl}>
@@ -285,13 +337,14 @@ function Timeline({
           {placed.map((p) => {
             const t = byId.get(p.id);
             if (!t) return null;
+            const card = isCardTask(t) && t.card_id ? cardById.get(t.card_id) : undefined;
             const s = Math.max(p.start, START * 60);
             const top = ((s - START * 60) / 60) * HOUR;
             const h = Math.max(26, ((p.end - s) / 60) * HOUR - 3);
             const short = h < 46;
             const w = 100 / p.lanes;
             const style = {
-              '--c': CATEGORY_COLOR[t.category],
+              '--c': card ? card.boardColor : CATEGORY_COLOR[t.category],
               top: top + 1,
               height: h,
               left: `calc(${p.lane * w}% + 6px)`,
@@ -303,11 +356,12 @@ function Timeline({
                   type="button"
                   className={`${styles.blk} ${short ? styles.short : ''} ${t.done_at ? styles.done : ''}`}
                   style={{ ...style, pointerEvents: 'auto' }}
-                  onClick={() => onEdit(t)}
-                  aria-label={`${t.title}, ${hhmm(t.start_time)} – ${toTime(p.end)}, modifier`}
+                  onClick={() => (card ? openCard(card) : onEdit(t))}
+                  aria-label={`${t.title}, ${hhmm(t.start_time)} – ${toTime(p.end)}, ${card ? 'ouvrir la carte' : 'modifier'}`}
                 >
-                  {!short && <span className={styles.cat}>{CATEGORY_LABEL[t.category]}</span>}
+                  {!short && <span className={styles.cat}>{card ? `🗂 ${card.boardTitle}` : CATEGORY_LABEL[t.category]}</span>}
                   <b>{t.title}</b>
+                  {!short && !card && t.card_id && linked?.get(t.card_id) && <small>🗂 {linked.get(t.card_id)?.title}</small>}
                   <small>
                     {hhmm(t.start_time)} – {toTime(p.end)}
                   </small>
@@ -316,7 +370,7 @@ function Timeline({
                   type="button"
                   className={`${styles.ck} ${t.done_at ? styles.ckDone : ''}`}
                   style={{
-                    '--c': CATEGORY_COLOR[t.category],
+                    '--c': card ? card.boardColor : CATEGORY_COLOR[t.category],
                     pointerEvents: 'auto',
                     top: top + 1 + (short ? Math.max(0, h / 2 - 20) : 0),
                     left: `calc(${(p.lane + 1) * w}% - 4px - 40px)`,
@@ -338,6 +392,7 @@ function Timeline({
           )}
         </div>
       </div>
+      {prompt.element}
     </div>
   );
 }

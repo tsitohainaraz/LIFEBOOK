@@ -161,7 +161,11 @@ export function useCreateBoard() {
 export function useBoardMutations(boardId: string) {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const invalidate = () => qc.invalidateQueries({ queryKey: boardKey(boardId) });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ['my-cards'] });
+    void qc.invalidateQueries({ queryKey: ['linked-cards'] });
+    return qc.invalidateQueries({ queryKey: boardKey(boardId) });
+  };
   const invalidateList = () => qc.invalidateQueries({ queryKey: ['boards', user?.id] });
 
   const updateBoard = useMutation({

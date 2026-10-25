@@ -7,6 +7,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { VerifyPage } from './pages/auth/VerifyPage';
 import { CallbackPage } from './pages/auth/CallbackPage';
 import { OnboardingPage } from './pages/onboarding/OnboardingPage';
+import { HomePage } from './pages/home/HomePage';
 
 export function App() {
   return (
@@ -23,7 +24,7 @@ export function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
-              <Route index element={<Placeholder title="Accueil" />} />
+              <Route index element={<HomePage />} />
               <Route path="jour" element={<Placeholder title="Ma journée" />} />
               <Route path="semaine" element={<Placeholder title="Ma semaine" />} />
               <Route path="mois" element={<Placeholder title="Mon mois" />} />

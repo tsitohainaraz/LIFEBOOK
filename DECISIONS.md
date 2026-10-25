@@ -68,3 +68,69 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
   - « Aujourd'hui » et « maintenant » sont calculés dans le fuseau du profil (`profiles.timezone`, `Indian/Antananarivo` par défaut), modifiable dans le menu du compte.
 - `currentDate()` sert à l'affichage et aux calculs du jour ; `nowISO()` sert aux horodatages enregistrés en base (`done_at`, consentement…), toujours en UTC réel.
 - Limite : la bibliothèque Supabase utilise l'horloge de l'appareil pour l'expiration de la session. Avec une horloge très fausse (plusieurs heures en temps universel, pas seulement le fuseau), la session peut se renouveler plus souvent que prévu.
+
+## Tableaux d'équipe et « À suivre » (branche feature/super-trello)
+
+### Phase 1 — « À suivre »
+- Le « bloc virtuel du rendez-vous de planification » cité par PROMPT_SUPER_TRELLO.md n'existe pas dans le code : `collectPlannedItems()` réunit les tâches avec une heure (et les cartes à partir de la phase 7). La source `'planning'` est prévue dans le type `PlannedItem` mais n'est pas encore alimentée.
+- L'accueil charge désormais les tâches d'aujourd'hui **et de demain** (pour « le premier élément de demain »). Le programme du jour n'affiche que celles d'aujourd'hui.
+- Les dates des éléments planifiés sont en heure murale du fuseau du profil, comme `currentDate()`.
+- Le bloc « À suivre » est un emplacement `footer` ajouté au composant `NowRing` existant.
+- Le test de `formatRelative` et de `phraseUpcoming` est dans `src/utils/upcoming.test.ts` (les fonctions sont dans `src/utils/now.ts`, comme demandé).
+
+### Phase 2 — Base de données des tableaux (`0002_tableaux.sql`)
+- Fonctions d'aide supplémentaires (security definer, `search_path = ''`) : `can_edit_board` (owner ou member), `is_user_board_member`, `card_board_id`, `label_board_id`, `shares_board_with`. Elles évitent la récursion des politiques et les jointures répétées.
+- Un trigger empêche de mettre une carte dans la liste d'un autre tableau.
+- Création de commentaires : réservée aux rôles owner et member (les observateurs ne modifient rien, comme pour le reste du tableau).
+- `get_invite_preview` renvoie aussi la couleur du tableau et l'état de l'invitation (`ok`, `expired`, `used`) pour afficher un message clair, sans autre donnée personnelle.
+- Jeton d'invitation : `translate(encode(extensions.gen_random_bytes(24), 'base64'), '+/=', '-_')` (pgcrypto est dans le schéma `extensions` sur Supabase).
+- Les avatars stockés dans le bucket privé `avatars` deviennent lisibles par les personnes qui partagent un tableau (politique `avatars_select_board_members`). Aucune autre colonne de `profiles` n'est exposée : la vue `member_profiles` ne contient que id, prénom, nom et avatar.
+- Supprimer son compte supprime les tableaux dont on est owner (cascade sur `boards.owner_id`).
+- Le SQL a été vérifié dans PGlite (PostgreSQL embarqué) avec un socle qui imite Supabase : 0001 et 0002 appliqués deux fois de suite sans erreur, et 31 contrôles d'accès avec trois utilisateurs (owner, membre, observateur, non-membre).
+
+### Phase 3 — Écrans des tableaux
+- Code dans `src/features/boards/`. L'icône « Tableaux » est dans l'en-tête, à côté de « Mon résumé » (il n'y avait pas encore de cloche) ; la carte « Mes tableaux » est sur l'accueil. La barre d'onglets garde ses 6 onglets.
+- Tout le contenu d'un tableau (listes, cartes, membres, étiquettes, assignations, checklists) est dans une seule entrée de cache React Query `['board', id]` ; les déplacements, coches et assignations y sont appliqués de façon optimiste puis annulés en cas d'erreur.
+- Onglet du tableau dans l'URL : `/tableaux/:id?vue=cartes|discussion|equipe`.
+- Glisser-déposer : capteurs souris (6 px) et tactile (250 ms, 8 px), plus clavier. Le défilement automatique horizontal de dnd-kit est désactivé (il se battait avec le scroll-snap) : près du bord de l'écran, la liste voisine s'affiche après 450 ms.
+- Réordonnancement de la checklist avec des boutons ↑ ↓ (plus simple et plus précis au doigt qu'un glisser-déposer dans un panneau qui défile).
+- Les mentions des commentaires sont détectées (`extractMentions`) ; leur enregistrement dans la table `mentions` est ajouté à la phase 6, une fois la table créée (phase 4).
+- « Planifier dans ma journée » crée une tâche de catégorie « Travail » liée à la carte (`tasks.card_id`).
+- Invitation : le jeton est gardé dans `sessionStorage` ; après la connexion et la fin du profil, la garde `ProtectedRoute` ramène sur `/invitation/:token`. « Plus tard » oublie l'invitation.
+- Temps réel : un canal par tableau ; `checklist_items` et `card_comments` n'ont pas de `board_id`, ils sont écoutés sans filtre (la RLS ne transmet que les lignes visibles) et triés côté application.
+
+### Phase 4 — Base de données équipe (`0003_equipe.sql`)
+- Suppression d'un fichier du bucket `board-files` : autorisée à son auteur (retrouvé par la table `attachments`, pour ne pas dépendre des colonnes internes `owner`/`owner_id` de `storage.objects`, qui varient selon les versions) ou à l'owner du tableau.
+- `attachments.path` doit commencer par le dossier du tableau ; il est unique.
+- Messages : écrits par les rôles owner et member (les observateurs lisent seulement) ; les messages système ne sont créés que par les triggers ; un message supprimé garde sa ligne avec `deleted_at` (« Message supprimé »).
+- Notifications : lecture et mise à jour de `read_at` seulement, par le destinataire (droit au niveau de la colonne) ; aucune insertion depuis l'application.
+- Notification de message : la notification non lue existante est mise à jour (dernier message, compteur `payload.count`) au lieu d'en créer une autre.
+- Rappels horaires (`run_hourly_notifications`, pg_cron `0 * * * *`) : « échéance demain », « échéance dépassée » (une fois par carte et par jour, dans le fuseau de chaque personne) et, à 18:00 heure locale, « Envoie ton rapport du jour » pour les owners et members des tableaux actifs ces 7 derniers jours (activité ou messages) qui n'ont pas envoyé leur rapport.
+- Vérifié dans PGlite avec un faux pg_cron : 0001 à 0003 appliqués deux fois, 62 contrôles d'accès et de notifications.
+
+### Phase 5 — Fichiers et discussion
+- Fichiers dans `src/features/files/`, discussion dans `src/features/chat/`.
+- Deux boutons pour joindre : « Fichier » (galerie ou documents, sans `capture`) et « Photo » (`capture="environment"`, qui ouvre directement l'appareil photo). Un seul champ avec `capture` empêcherait de choisir dans la galerie sur la plupart des téléphones.
+- La barre de progression passe par `XMLHttpRequest` vers l'API Storage (supabase-js ne donne pas la progression) ; « Annuler » interrompt l'envoi.
+- Photos : réduites à 1600 px et converties en JPEG 0,8 ; l'orientation est respectée avec `createImageBitmap(..., { imageOrientation: 'from-image' })`. Vidéos : envoyées telles quelles (50 Mo max) avec une miniature prise à 1 s, rangée à côté (`…-thumb.jpg`). Documents (PDF, Word, Excel, PowerPoint, OpenDocument, texte, CSV) : 20 Mo max.
+- `attachment_owner` reconnaît aussi le chemin de la miniature, pour que l'auteur puisse la supprimer avec la vidéo.
+- Les documents s'ouvrent dans un nouvel onglet via une URL signée ; photos et vidéos dans une visionneuse plein écran (glissement ou flèches). Suppression d'une photo ou d'une vidéo depuis la visionneuse (auteur ou owner).
+- Les @mentions sont enregistrées dans la table `mentions` dès maintenant, pour les messages et les commentaires de carte (la notification est créée par le trigger de la phase 4).
+- Appui long (500 ms) ou clic droit sur un de ses messages : Modifier (messages texte) ou Supprimer. Les observateurs lisent la discussion sans écrire.
+- Compteur de non-lus : messages des autres (hors messages système et supprimés) postérieurs à `message_reads.last_read_at`, rafraîchi toutes les 30 s et à chaque lecture.
+
+### Phase 6 — Rapport d'équipe et notifications
+- « Mon rapport du jour » est dans l'onglet « Équipe du jour » du tableau ; le rappel de 18:00 ouvre directement le formulaire (`?vue=equipe&rapport=1`).
+- Résumé automatique : éléments de checklist cochés par moi aujourd'hui (jour local du profil), cartes que j'ai terminées aujourd'hui (journal `board_activity`, action `card_done`), cartes en cours qui me sont assignées (hors liste « Fait »). « Fait aujourd'hui » est prérempli avec ce résumé et reste modifiable.
+- Un nouvel envoi le même jour met à jour le rapport (upsert) et publie un nouveau message « rapport » dans la discussion.
+- Onglet « Équipe du jour » : une carte par membre (les observateurs ne sont pas listés), avancement moyen des rapports envoyés.
+- Cloche dans l'en-tête, à côté de l'icône Tableaux ; sur les écrans de moins de 370 px, l'icône Tableaux est masquée pour garder des boutons de 44 px (la carte « Mes tableaux » de l'accueil reste disponible).
+- `/notifications` affiche les 100 dernières notifications, groupées par jour ; si les tables ne sont pas encore créées, la cloche n'affiche rien et la page indique que les tableaux ne sont pas activés.
+
+### Phase 7 — Liens entre les tableaux et LifeBook
+- `useMyCards` (`src/features/boards/myCards.ts`) : cartes **qui me sont assignées**, non archivées, avec une échéance ; si les tables n'existent pas encore, la liste est vide et les écrans fonctionnent comme avant.
+- Une carte avec une heure devient une « tâche » virtuelle d'1 h (identifiant `card:<id>`, catégorie « Travail ») pour la frise, la vue semaine, le cercle Maintenant et « À suivre ». Ces blocs prennent la couleur du tableau ; un appui ouvre la carte.
+- Dans le cercle Maintenant, « Tâche terminée » sur une carte la termine (et la range dans « Fait ») ; « Faire plus tard » ouvre la carte (on ne déplace pas l'échéance d'une carte d'équipe depuis l'accueil).
+- Cocher une tâche liée à une carte propose « Marquer aussi la carte comme faite ? » sur l'accueil, la Journée, la Semaine et le Mois.
+- Progression d'un objectif relié à un tableau : les cartes du tableau (non archivées) comptent comme des éléments, faites si terminées. Elle est affichée dans « Mon année », seul écran qui montre la progression des objectifs.
+- Accueil : « Mes cartes urgentes » = cartes en retard ou dues dans les 48 h, 5 au maximum.

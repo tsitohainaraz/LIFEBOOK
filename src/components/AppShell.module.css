@@ -61,3 +61,17 @@
   color: var(--urgent);
   font-weight: 600;
 }
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.logo {
+  font-size: clamp(18px, 5.6vw, 22px);
+}
+/* Écrans très étroits : l'icône Tableaux laisse la place (la carte « Mes tableaux » de l'accueil reste là). */
+@media (max-width: 370px) {
+  .optional {
+    display: none !important;
+  }
+}

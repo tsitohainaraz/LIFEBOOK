@@ -145,6 +145,7 @@ export type TaskRow = Timestamps & {
   reminder_min: number | null;
   recurrence_group: string | null;
   postponed_count: number;
+  card_id: string | null;
 }
 
 export type PlanRow = Timestamps & {
@@ -193,6 +194,188 @@ export type LifePlanRow = Timestamps & {
   legacy: string | null;
 }
 
+// ---------------------------------------------------------------------------
+// Tableaux d'équipe (0002_tableaux.sql)
+// ---------------------------------------------------------------------------
+export type BoardRole = 'owner' | 'member' | 'viewer';
+
+export type BoardRow = Timestamps & {
+  id: string;
+  owner_id: string;
+  title: string;
+  color: string;
+  goal_id: string | null;
+  archived_at: string | null;
+};
+
+export type BoardMemberRow = {
+  board_id: string;
+  user_id: string;
+  role: BoardRole;
+  joined_at: string;
+};
+
+export type BoardInviteRow = {
+  id: string;
+  board_id: string;
+  token: string;
+  role: Exclude<BoardRole, 'owner'>;
+  invited_by: string | null;
+  expires_at: string;
+  accepted_by: string | null;
+  accepted_at: string | null;
+  created_at: string;
+};
+
+export type ListRow = Timestamps & {
+  id: string;
+  board_id: string;
+  title: string;
+  position: number;
+  archived_at: string | null;
+};
+
+export type CardRow = Timestamps & {
+  id: string;
+  board_id: string;
+  list_id: string;
+  title: string;
+  description: string | null;
+  position: number;
+  due_date: string | null;
+  due_time: string | null;
+  done_at: string | null;
+  created_by: string | null;
+  archived_at: string | null;
+};
+
+export type CardMemberRow = { card_id: string; user_id: string };
+
+export type BoardLabelRow = { id: string; board_id: string; name: string; color: string };
+
+export type CardLabelRow = { card_id: string; label_id: string };
+
+export type ChecklistItemRow = {
+  id: string;
+  card_id: string;
+  text: string;
+  position: number;
+  done_at: string | null;
+  done_by: string | null;
+  created_at: string;
+};
+
+export type CardCommentRow = {
+  id: string;
+  card_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  edited_at: string | null;
+};
+
+export type BoardActivityRow = {
+  id: string;
+  board_id: string;
+  user_id: string | null;
+  action: string;
+  payload: { [key: string]: Json | undefined };
+  created_at: string;
+};
+
+/** Vue public.member_profiles : colonnes publiques des personnes qui partagent un tableau. */
+export type MemberProfileRow = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+};
+
+export type InvitePreview = {
+  board_title: string;
+  board_color: string;
+  inviter_first_name: string | null;
+  status: 'ok' | 'expired' | 'used';
+};
+
+// ---------------------------------------------------------------------------
+// Équipe (0003_equipe.sql)
+// ---------------------------------------------------------------------------
+export type DailyReportRow = {
+  id: string;
+  board_id: string;
+  user_id: string;
+  date: string;
+  auto_summary: { [key: string]: Json | undefined };
+  progress_pct: number | null;
+  done_text: string | null;
+  blockers_text: string | null;
+  tomorrow_text: string | null;
+  posted_at: string | null;
+  created_at: string;
+};
+
+export type MessageKind = 'text' | 'report' | 'system';
+
+export type MessageRow = {
+  id: string;
+  board_id: string;
+  user_id: string | null;
+  body: string;
+  kind: MessageKind;
+  reply_to: string | null;
+  report_id: string | null;
+  created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+};
+
+export type MessageReadRow = { board_id: string; user_id: string; last_read_at: string };
+
+export type AttachmentRow = {
+  id: string;
+  board_id: string;
+  card_id: string | null;
+  message_id: string | null;
+  report_id: string | null;
+  user_id: string;
+  path: string;
+  mime: string | null;
+  size_bytes: number;
+  width: number | null;
+  height: number | null;
+  duration_s: number | null;
+  thumb_path: string | null;
+  created_at: string;
+};
+
+export type MentionRow = {
+  id: string;
+  user_id: string;
+  board_id: string;
+  card_id: string | null;
+  comment_id: string | null;
+  message_id: string | null;
+  created_at: string;
+};
+
+export type NotificationRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  board_id: string | null;
+  card_id: string | null;
+  message_id: string | null;
+  actor_id: string | null;
+  title: string;
+  body: string;
+  link: string;
+  payload: { [key: string]: Json | undefined };
+  read_at: string | null;
+  pushed_at: string | null;
+  created_at: string;
+};
+
 export type BucketItemRow = Timestamps & {
   id: string;
   user_id: string;
@@ -227,10 +410,35 @@ export type Database = {
       habit_logs: Table<HabitLogRow, MakeInsert<HabitLogRow, 'habit_id' | 'date'>>;
       life_plan: Table<LifePlanRow, Partial<LifePlanRow>>;
       bucket_items: Table<BucketItemRow, MakeInsert<BucketItemRow, 'title'>>;
+      boards: Table<BoardRow, MakeInsert<BoardRow, 'title'>>;
+      board_members: Table<BoardMemberRow, MakeInsert<BoardMemberRow, 'board_id' | 'user_id'>>;
+      board_invites: Table<BoardInviteRow, MakeInsert<BoardInviteRow, 'board_id' | 'token'>>;
+      lists: Table<ListRow, MakeInsert<ListRow, 'board_id' | 'title' | 'position'>>;
+      cards: Table<CardRow, MakeInsert<CardRow, 'board_id' | 'list_id' | 'title' | 'position'>>;
+      card_members: Table<CardMemberRow, CardMemberRow>;
+      board_labels: Table<BoardLabelRow, MakeInsert<BoardLabelRow, 'board_id'>>;
+      card_labels: Table<CardLabelRow, CardLabelRow>;
+      checklist_items: Table<ChecklistItemRow, MakeInsert<ChecklistItemRow, 'card_id' | 'text'>>;
+      card_comments: Table<CardCommentRow, MakeInsert<CardCommentRow, 'card_id' | 'body'>>;
+      board_activity: Table<BoardActivityRow, MakeInsert<BoardActivityRow, 'board_id' | 'action'>>;
+      daily_reports: Table<DailyReportRow, MakeInsert<DailyReportRow, 'board_id' | 'date'>>;
+      messages: Table<MessageRow, MakeInsert<MessageRow, 'board_id'>>;
+      message_reads: Table<MessageReadRow, MakeInsert<MessageReadRow, 'board_id'>>;
+      attachments: Table<AttachmentRow, MakeInsert<AttachmentRow, 'board_id' | 'path'>>;
+      mentions: Table<MentionRow, MakeInsert<MentionRow, 'user_id' | 'board_id'>>;
+      notifications: Table<NotificationRow, MakeInsert<NotificationRow, 'user_id' | 'type' | 'title'>>;
     };
-    Views: { [_ in never]: never };
+    Views: {
+      member_profiles: { Row: MemberProfileRow; Relationships: [] };
+    };
     Functions: {
       delete_my_account: { Args: Record<string, never>; Returns: undefined };
+      is_board_member: { Args: { b: string }; Returns: boolean };
+      board_role: { Args: { b: string }; Returns: BoardRole | null };
+      create_invite: { Args: { b: string; r: Exclude<BoardRole, 'owner'> }; Returns: string };
+      accept_invite: { Args: { t: string }; Returns: string };
+      get_invite_preview: { Args: { t: string }; Returns: InvitePreview[] };
+      board_storage_bytes: { Args: { b: string }; Returns: number };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

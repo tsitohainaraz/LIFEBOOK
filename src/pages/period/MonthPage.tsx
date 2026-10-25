@@ -27,6 +27,8 @@ import {
 import { goalStatus } from '../../utils/goals';
 import { habitRate, habitStreak, isPlannedDay } from '../../utils/habits';
 import type { Category, Json, TaskRow } from '../../types/database';
+import { useLinkedCards, useMyCards, type MyCard } from '../../features/boards/myCards';
+import { useCardDonePrompt } from '../../features/boards/CardDonePrompt';
 import styles from './Period.module.css';
 import { currentDate } from '../../lib/serverTime';
 
@@ -54,6 +56,7 @@ export function MonthPage() {
   const last = `${first.slice(0, 8)}${pad(dim)}`;
   const prefix = first.slice(0, 8);
   const tasksQ = useTasksRange(first, last);
+  const monthCards = useMyCards(last, first).data ?? [];
   const tasks = useMemo(() => tasksQ.data ?? [], [tasksQ.data]);
   const goals = useGoals().data ?? [];
   const planQ = usePlan('month', first);
@@ -144,6 +147,7 @@ export function MonthPage() {
               const ds = prefix + pad(i + 1);
               const ts = tasks.filter((t) => t.date === ds);
               const gd = deadlines.filter((g) => g.deadline === ds);
+              const cd = monthCards.filter((c) => c.due_date === ds);
               const wd = (lead + i) % 7;
               return (
                 <button
@@ -151,12 +155,15 @@ export function MonthPage() {
                   type="button"
                   className={`${styles.mday} ${ds === today ? styles.today : ''} ${ds < today ? styles.past : ''} ${wd >= 5 ? styles.weekend : ''}`}
                   onClick={() => setOpenDay(ds)}
-                  aria-label={`${i + 1} ${monthName}${ts.length ? `, ${ts.length} activité(s)` : ''}${gd.length ? ", échéance d'objectif" : ''}`}
+                  aria-label={`${i + 1} ${monthName}${ts.length ? `, ${ts.length} activité(s)` : ''}${cd.length ? `, ${cd.length} carte(s)` : ''}${gd.length ? ", échéance d'objectif" : ''}`}
                 >
                   <b>{i + 1}</b>
                   <span className={styles.dots}>
                     {gd.slice(0, 1).map((g) => (
                       <i key={g.id} style={{ '--c': 'var(--urgent)' } as CSSProperties} />
+                    ))}
+                    {cd.slice(0, 2).map((c) => (
+                      <i key={c.id} style={{ '--c': c.done_at ? 'var(--muted)' : c.boardColor, borderRadius: 1 } as CSSProperties} />
                     ))}
                     {ts.slice(0, 4).map((t) => (
                       <i key={t.id} style={{ '--c': t.done_at ? 'var(--muted)' : CATEGORY_COLOR[t.category] } as CSSProperties} />
@@ -179,6 +186,10 @@ export function MonthPage() {
           <span>
             <i style={{ background: 'var(--urgent)' }} />
             échéance d'objectif
+          </span>
+          <span>
+            <i style={{ background: 'var(--soon)', borderRadius: 1 }} />
+            carte d'un tableau
           </span>
         </div>
       </div>
@@ -242,7 +253,14 @@ export function MonthPage() {
 
       <HabitTracker first={first} last={last} dim={dim} today={today} />
 
-      {openDay && <DaySheet date={openDay} tasks={tasks.filter((t) => t.date === openDay)} onClose={() => setOpenDay(null)} />}
+      {openDay && (
+        <DaySheet
+          date={openDay}
+          tasks={tasks.filter((t) => t.date === openDay)}
+          cards={monthCards.filter((c) => c.due_date === openDay)}
+          onClose={() => setOpenDay(null)}
+        />
+      )}
     </>
   );
 }
@@ -384,7 +402,9 @@ function HabitTracker({ first, last, dim, today }: { first: string; last: string
 }
 
 /** Panneau d'un jour du mois : ses activités et un ajout rapide. */
-function DaySheet({ date, tasks, onClose }: { date: string; tasks: TaskRow[]; onClose: () => void }) {
+function DaySheet({ date, tasks, cards, onClose }: { date: string; tasks: TaskRow[]; cards: MyCard[]; onClose: () => void }) {
+  const prompt = useCardDonePrompt();
+  const linked = useLinkedCards(tasks.map((t) => t.card_id).filter((x): x is string => !!x)).data;
   const add = useAddTasks();
   const toggle = useToggleTask();
   const del = useDeleteTask();
@@ -416,17 +436,46 @@ function DaySheet({ date, tasks, onClose }: { date: string; tasks: TaskRow[]; on
   return (
     <Sheet title={cap(fmtDate(date, 'EEEE d MMMM'))} onClose={onClose}>
       <div className="list">
-        {tasks.length === 0 && <p className="empty">Rien de prévu ce jour-là.</p>}
+        {tasks.length === 0 && cards.length === 0 && <p className="empty">Rien de prévu ce jour-là.</p>}
+        {cards.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            className={`${styles.ev} ${c.done_at ? styles.done : ''}`}
+            style={{ '--c': c.boardColor, textAlign: 'left', color: 'var(--ink)' } as CSSProperties}
+            onClick={() => navigate(`/tableaux/${c.board_id}/carte/${c.id}`)}
+          >
+            <span className={styles.time} style={{ minWidth: 44 }}>
+              {c.due_time ? hhmm(c.due_time) : '—'}
+            </span>
+            <span className={styles.t}>
+              <small>🗂 {c.boardTitle}</small>
+              <span>{c.title}</span>
+            </span>
+          </button>
+        ))}
         {tasks.map((t) => (
           <div key={t.id} className={`${styles.ev} ${t.done_at ? styles.done : ''}`} style={{ '--c': CATEGORY_COLOR[t.category] } as CSSProperties}>
             <span className={styles.time} style={{ minWidth: 44 }}>
               {t.start_time ? hhmm(t.start_time) : '—'}
             </span>
             <div className={styles.t}>
-              <small>{CATEGORY_LABEL[t.category]}</small>
+              <small>
+                {CATEGORY_LABEL[t.category]}
+                {t.card_id && linked?.get(t.card_id) ? ` · 🗂 ${linked.get(t.card_id)?.title}` : ''}
+              </small>
               <span>{t.title}</span>
             </div>
-            <button type="button" className="check" aria-pressed={!!t.done_at} aria-label={`Marquer ${t.title} comme faite`} onClick={() => void toggle.toggle(t)}>
+            <button
+              type="button"
+              className="check"
+              aria-pressed={!!t.done_at}
+              aria-label={`Marquer ${t.title} comme faite`}
+              onClick={() => {
+                void toggle.toggle(t);
+                if (!t.done_at && t.card_id) prompt.ask(t);
+              }}
+            >
               {t.done_at ? '✓' : ''}
             </button>
             <button type="button" className="x" aria-label={`Supprimer ${t.title}`} onClick={() => void del.mutateAsync({ id: t.id }).then(() => toast('Activité supprimée'))}>
@@ -464,6 +513,7 @@ function DaySheet({ date, tasks, onClose }: { date: string; tasks: TaskRow[]; on
           Ouvrir la journée
         </button>
       </form>
+      {prompt.element}
     </Sheet>
   );
 }

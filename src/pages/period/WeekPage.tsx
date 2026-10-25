@@ -27,6 +27,8 @@ import {
 import { taskEnd } from '../../utils/now';
 import type { TaskRow } from '../../types/database';
 import { CategorySplit } from '../day/CategorySplit';
+import { useLinkedCards, useMyCards, type MyCard } from '../../features/boards/myCards';
+import { useCardDonePrompt } from '../../features/boards/CardDonePrompt';
 import styles from './Period.module.css';
 import { currentDate } from '../../lib/serverTime';
 
@@ -42,6 +44,7 @@ export function WeekPage() {
   const end = addDaysISO(week, 6);
   const days = Array.from({ length: 7 }, (_, i) => addDaysISO(week, i));
   const tasksQ = useTasksRange(week, end);
+  const weekCards = useMyCards(end, week).data ?? [];
   const tasks = useMemo(() => tasksQ.data ?? [], [tasksQ.data]);
   const planQ = usePlan('week', week);
   const savePlan = useSavePlan('week', week);
@@ -139,6 +142,7 @@ export function WeekPage() {
             days={days}
             today={today}
             tasks={tasks}
+            cards={weekCards}
             onOpen={(d) => {
               setOpenDays((s) => new Set(s).add(d));
               setTimeout(() => document.getElementById(`jour-${d}`)?.scrollIntoView({ block: 'center' }), 0);
@@ -148,6 +152,7 @@ export function WeekPage() {
             days={days}
             today={today}
             tasks={tasks}
+            cards={weekCards}
             openDays={openDays}
             onToggleOpen={(d, open) =>
               setOpenDays((s) => {
@@ -182,7 +187,8 @@ export function WeekPage() {
   );
 }
 
-function WeekGrid({ days, today, tasks, onOpen }: { days: string[]; today: string; tasks: TaskRow[]; onOpen: (d: string) => void }) {
+function WeekGrid({ days, today, tasks, cards, onOpen }: { days: string[]; today: string; tasks: TaskRow[]; cards: MyCard[]; onOpen: (d: string) => void }) {
+  const navigate = useNavigate();
   const H = (H1 - H0) * PX;
   const now = currentDate();
   const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -241,6 +247,23 @@ function WeekGrid({ days, today, tasks, onOpen }: { days: string[]; today: strin
                   />
                 );
               })}
+            {cards
+              .filter((c) => c.due_date === d && c.due_time)
+              .map((c) => {
+                const s = Math.max(toMin(c.due_time), H0 * 60);
+                const e = Math.min(toMin(c.due_time) + 60, H1 * 60);
+                if (e <= s) return null;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`${styles.b} ${c.done_at ? styles.done : ''}`}
+                    style={{ '--c': c.boardColor, top: ((s - H0 * 60) / 60) * PX, height: Math.max(4, ((e - s) / 60) * PX - 1), outline: '1px dashed var(--ink)' } as CSSProperties}
+                    aria-label={`Carte ${c.title} (${c.boardTitle}), ${hhmm(c.due_time)}`}
+                    onClick={() => navigate(`/tableaux/${c.board_id}/carte/${c.id}`)}
+                  />
+                );
+              })}
             {d === today && nowMin >= H0 * 60 && nowMin <= H1 * 60 && (
               <div className={styles.nowLine} style={{ top: ((nowMin - H0 * 60) / 60) * PX }} />
             )}
@@ -255,6 +278,7 @@ function DayList({
   days,
   today,
   tasks,
+  cards,
   openDays,
   onToggleOpen,
   onAdd,
@@ -263,6 +287,7 @@ function DayList({
   days: string[];
   today: string;
   tasks: TaskRow[];
+  cards: MyCard[];
   openDays: Set<string>;
   onToggleOpen: (d: string, open: boolean) => void;
   onAdd: (d: string) => void;
@@ -272,6 +297,8 @@ function DayList({
   const del = useDeleteTask();
   const toast = useToast();
   const navigate = useNavigate();
+  const prompt = useCardDonePrompt();
+  const linked = useLinkedCards(tasks.map((t) => t.card_id).filter((x): x is string => !!x)).data;
   return (
     <div className="card">
       <div className={styles.cardTitle}>
@@ -280,6 +307,7 @@ function DayList({
       <div className={styles.days}>
         {days.map((d) => {
           const evs = tasks.filter((t) => t.date === d);
+          const dayCards = cards.filter((c) => c.due_date === d);
           const dn = evs.filter((t) => t.done_at).length;
           return (
             <details
@@ -295,7 +323,7 @@ function DayList({
                   <b>{parseISODate(d).getDate()}</b>
                 </div>
                 <div className={styles.ds}>
-                  <span>{evs.length ? evs.map((e) => e.title).join(' · ') : 'Rien de prévu'}</span>
+                  <span>{evs.length || dayCards.length ? [...evs.map((e) => e.title), ...dayCards.map((c) => `🗂 ${c.title}`)].join(' · ') : 'Rien de prévu'}</span>
                   {evs.length > 0 && (
                     <div className="mini">
                       <i style={{ width: `${(dn / evs.length) * 100}%` }} />
@@ -307,14 +335,32 @@ function DayList({
                 </span>
               </summary>
               <div className={styles.dbody}>
-                {evs.length === 0 && <p className="empty">Aucune activité. Ajoute la première ci-dessous.</p>}
+                {evs.length === 0 && dayCards.length === 0 && <p className="empty">Aucune activité. Ajoute la première ci-dessous.</p>}
+                {dayCards.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`${styles.ev} ${c.done_at ? styles.done : ''}`}
+                    style={{ '--c': c.boardColor, textAlign: 'left', color: 'var(--ink)' } as CSSProperties}
+                    onClick={() => navigate(`/tableaux/${c.board_id}/carte/${c.id}`)}
+                  >
+                    <span className={styles.time}>{c.due_time ? hhmm(c.due_time) : 'échéance'}</span>
+                    <span className={styles.t}>
+                      <small>🗂 {c.boardTitle}</small>
+                      <span>{c.title}</span>
+                    </span>
+                  </button>
+                ))}
                 {evs.map((e) => (
                   <div key={e.id} className={`${styles.ev} ${e.done_at ? styles.done : ''}`} style={{ '--c': CATEGORY_COLOR[e.category] } as CSSProperties}>
                     <span className={styles.time}>
                       {e.start_time ? `${hhmm(e.start_time)} – ${toTime(taskEnd(e))}` : 'sans heure'}
                     </span>
                     <button type="button" className={styles.t} onClick={() => onEdit(e)}>
-                      <small>{CATEGORY_LABEL[e.category]}</small>
+                      <small>
+                        {CATEGORY_LABEL[e.category]}
+                        {e.card_id && linked?.get(e.card_id) ? ` · 🗂 ${linked.get(e.card_id)?.title}` : ''}
+                      </small>
                       <span>{e.title}</span>
                     </button>
                     <button
@@ -324,7 +370,11 @@ function DayList({
                       aria-label={`Marquer ${e.title} comme faite`}
                       onClick={() =>
                         void toggle.toggle(e).then(
-                          () => !e.done_at && toast("Bravo, c'est fait"),
+                          () => {
+                            if (e.done_at) return;
+                            toast("Bravo, c'est fait");
+                            if (e.card_id) prompt.ask(e);
+                          },
                           () => toast('Non enregistré : vérifie ta connexion.'),
                         )
                       }
@@ -361,6 +411,7 @@ function DayList({
           );
         })}
       </div>
+      {prompt.element}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { DOMAINS, DOMAIN_COLOR, DOMAIN_LABEL } from '../../utils/categories';
 import { cap, daysInMonth, fmtDate, pad, parseISODate, weekOfYear } from '../../utils/dates';
 import { STATUS_ORDER, goalProgress, goalStatus, goalStatusLabel } from '../../utils/goals';
 import type { GoalDomain, GoalRow, GoalStepRow } from '../../types/database';
+import { useGoalBoardProgress } from '../../features/boards/myCards';
 import styles from './Period.module.css';
 import { currentDate, nowISO } from '../../lib/serverTime';
 
@@ -26,6 +27,7 @@ export function YearPage() {
   const goalsQ = useGoals();
   const stepsQ = useGoalSteps();
   const links = useGoalTasks().data ?? [];
+  const goalBoards = useGoalBoardProgress().data;
   const planQ = usePlan('year', first);
   const savePlan = useSavePlan('year', first);
   const { addGoal, updateGoal, deleteGoal } = useGoalMutations();
@@ -207,7 +209,8 @@ export function YearPage() {
           <div className="list">
             {shown.map((g) => {
               const gs = (stepsQ.data ?? []).filter((s) => s.goal_id === g.id);
-              const p = goalProgress(gs, links.filter((l) => l.goal_id === g.id));
+              const boardPart = goalBoards?.get(g.id);
+              const p = goalProgress(gs, links.filter((l) => l.goal_id === g.id), boardPart);
               const s = goalStatus(g, now);
               const parent = g.parent_goal_id ? goalById.get(g.parent_goal_id) : null;
               const q = Math.floor((Number((g.deadline ?? '').slice(5, 7)) - 1) / 3);
@@ -224,7 +227,7 @@ export function YearPage() {
                           <i style={{ width: `${p.ratio * 100}%` }} />
                         </div>
                         <small>
-                          {p.done}/{p.total} étapes et tâches faites
+                          {p.done}/{p.total} {boardPart ? 'étapes, tâches et cartes faites' : 'étapes et tâches faites'}
                         </small>
                       </>
                     ) : (

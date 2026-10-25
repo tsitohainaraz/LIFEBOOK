@@ -52,13 +52,17 @@ export interface Progress {
   ratio: number | null;
 }
 
-/** Progression : étapes faites + tâches liées faites, sur le total des deux. */
+/**
+ * Progression : étapes faites + tâches liées faites (+ cartes terminées des tableaux reliés),
+ * sur le total.
+ */
 export function goalProgress(
   steps: { done_at: string | null }[],
   linkedTasks: { done_at: string | null }[],
+  boardCards: { done: number; total: number } = { done: 0, total: 0 },
 ): Progress {
-  const total = steps.length + linkedTasks.length;
-  const done = steps.filter((s) => s.done_at).length + linkedTasks.filter((t) => t.done_at).length;
+  const total = steps.length + linkedTasks.length + boardCards.total;
+  const done = steps.filter((s) => s.done_at).length + linkedTasks.filter((t) => t.done_at).length + boardCards.done;
   return { done, total, ratio: total ? done / total : null };
 }
 

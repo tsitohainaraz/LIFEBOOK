@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type InputHTMLAttributes, type TextareaHTM
 const DELAY = 700;
 
 /** Garde la valeur locale pendant la saisie et l'enregistre après une courte pause. */
-function useAutoSave(value: string, onSave: (v: string) => void) {
+function useAutoSave(value: string, onSave: (v: string) => void, delay = DELAY) {
   const [local, setLocal] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const typing = useRef(false);
@@ -23,7 +23,7 @@ function useAutoSave(value: string, onSave: (v: string) => void) {
     timer.current = setTimeout(() => {
       typing.current = false;
       save(v);
-    }, DELAY);
+    }, delay);
   };
   return [local, change] as const;
 }
@@ -31,19 +31,23 @@ function useAutoSave(value: string, onSave: (v: string) => void) {
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
   value: string;
   onSave: (v: string) => void;
+  /** Pause (ms) avant l'enregistrement ; 700 par défaut. */
+  delay?: number;
 };
 
-export function AutoSaveInput({ value, onSave, ...rest }: InputProps) {
-  const [local, change] = useAutoSave(value, onSave);
+export function AutoSaveInput({ value, onSave, delay, ...rest }: InputProps) {
+  const [local, change] = useAutoSave(value, onSave, delay);
   return <input {...rest} value={local} onChange={(e) => change(e.target.value)} />;
 }
 
 type AreaProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'> & {
   value: string;
   onSave: (v: string) => void;
+  /** Pause (ms) avant l'enregistrement ; 700 par défaut. */
+  delay?: number;
 };
 
-export function AutoSaveTextarea({ value, onSave, ...rest }: AreaProps) {
-  const [local, change] = useAutoSave(value, onSave);
+export function AutoSaveTextarea({ value, onSave, delay, ...rest }: AreaProps) {
+  const [local, change] = useAutoSave(value, onSave, delay);
   return <textarea {...rest} value={local} onChange={(e) => change(e.target.value)} />;
 }

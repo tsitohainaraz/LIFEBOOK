@@ -1,4 +1,2 @@
-// Messages non lus par tableau : rempli à la phase 5 (discussion).
-export function useUnreadCounts(): { data: Map<string, number> | undefined } {
-  return { data: undefined };
-}
+// Messages non lus par tableau (implémentation dans la discussion).
+export { useUnreadCounts } from '../chat/useChat';

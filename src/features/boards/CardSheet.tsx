@@ -10,10 +10,13 @@ import { LoadingState } from '../../components/States';
 import { useToast } from '../../components/Toast';
 import { addDaysISO, cap, fmtDate, hhmm, nowMinutes, todayISO } from '../../utils/dates';
 import { firstFreeSlot } from '../../utils/schedule';
-import { cardDueStatus } from './boardUtils';
+import { cardDueStatus, extractMentions } from './boardUtils';
+import { saveMentions } from '../chat/useChat';
 import { MentionTextarea, RichText } from './MentionTextarea';
 import { memberName, useBoardMutations, useCardDetails, useCardMutations, type BoardData } from './useBoards';
 import type { BoardActivityRow, CardRow, ChecklistItemRow } from '../../types/database';
+import { FilePicker, Gallery, UploadQueue } from '../files/FileWidgets';
+import { useCardAttachments, useUploader } from '../files/useFiles';
 import styles from './Boards.module.css';
 
 const DAY_START = 6 * 60;
@@ -174,6 +177,8 @@ function CardDetails({ card, data, onClose }: { card: CardRow; data: BoardData; 
         </div>
       </section>
 
+      <CardFiles card={card} data={data} />
+
       {details.isLoading ? (
         <LoadingState />
       ) : details.isError ? (
@@ -227,6 +232,23 @@ function CardDetails({ card, data, onClose }: { card: CardRow; data: BoardData; 
         </>
       )}
     </>
+  );
+}
+
+function CardFiles({ card, data }: { card: CardRow; data: BoardData }) {
+  const { user } = useAuth();
+  const canEdit = data.myRole !== 'viewer';
+  const files = useCardAttachments(card.id);
+  const up = useUploader();
+  const items = files.data ?? [];
+  if (!canEdit && !items.length) return null;
+  return (
+    <section className={styles.section}>
+      <h3>Fichiers {items.length > 0 && `· ${items.length}`}</h3>
+      <Gallery items={items} canDelete={(a) => a.user_id === user?.id || data.myRole === 'owner'} />
+      <UploadQueue items={up.items} onCancel={up.cancel} onDismiss={up.dismiss} />
+      {canEdit && <FilePicker onFiles={(list) => void up.upload(list, { boardId: data.board.id, cardId: card.id })} />}
+    </section>
   );
 }
 
@@ -313,7 +335,12 @@ function Comments({ card, data, comments }: { card: CardRow; data: BoardData; co
   async function send() {
     if (!body.trim()) return;
     try {
-      await c.addComment.mutateAsync(body.trim());
+      const row = await c.addComment.mutateAsync(body.trim());
+      const mentioned = extractMentions(
+        body,
+        data.members.filter((mm) => mm.user_id !== user?.id).map((mm) => ({ id: mm.user_id, name: mm.profile?.first_name ?? '' })),
+      );
+      void saveMentions({ boardId: data.board.id, userIds: mentioned, cardId: card.id, commentId: row.id });
       setBody('');
     } catch {
       toast("Le commentaire n'a pas pu être envoyé.");

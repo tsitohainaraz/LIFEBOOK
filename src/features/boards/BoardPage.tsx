@@ -14,6 +14,9 @@ import { LabelsSheet, MembersSheet } from './MembersSheet';
 import { useBoard, useBoardMutations, type BoardData } from './useBoards';
 import { useBoardRealtime } from './useBoardRealtime';
 import { boardTabs, type BoardTabId } from './boardTabs';
+import { useUnreadCounts } from './unread';
+import { useBoardStorage } from '../files/useFiles';
+import { formatBytes } from '../files/fileRules';
 import styles from './Boards.module.css';
 
 export function BoardPage() {
@@ -23,6 +26,7 @@ export function BoardPage() {
   const [search, setSearch] = useSearchParams();
   const tab = (search.get('vue') as BoardTabId | null) ?? 'cartes';
   const [sheet, setSheet] = useState<'members' | 'menu' | 'labels' | null>(null);
+  const unread = useUnreadCounts(id ? [id] : []);
 
   if (q.isLoading) return <LoadingState label="Chargement du tableau…" />;
   if (q.isError) {
@@ -45,7 +49,7 @@ export function BoardPage() {
     );
   }
   const data = q.data;
-  const tabs = boardTabs(data);
+  const tabs = boardTabs(data, { unread: tab === 'discussion' ? 0 : (unread.data?.get(data.board.id) ?? 0) });
 
   return (
     <>
@@ -134,8 +138,14 @@ function BoardMenu({ data, onLabels, onClose }: { data: BoardData; onLabels: () 
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState(false);
   const isOwner = data.myRole === 'owner';
+  const storage = useBoardStorage(data.board.id, isOwner);
   return (
     <Sheet title={data.board.title} onClose={onClose}>
+      {isOwner && (
+        <p className="muted small" style={{ margin: 0 }}>
+          Espace utilisé par les fichiers : <b className="mono">{storage.data != null ? formatBytes(storage.data) : '…'}</b>
+        </p>
+      )}
       <button type="button" className="btn" onClick={onLabels}>
         Étiquettes
       </button>

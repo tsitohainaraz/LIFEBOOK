@@ -25,6 +25,7 @@ import { nowISO } from '../../lib/serverTime';
 import { fmtDate, hhmm, todayISO } from '../../utils/dates';
 import { cardDueStatus } from './boardUtils';
 import { memberName, useBoardMutations, type BoardData } from './useBoards';
+import { useBoardAttachmentCounts } from '../files/useFiles';
 import styles from './Boards.module.css';
 import type { CardRow } from '../../types/database';
 
@@ -46,7 +47,8 @@ function findContainer(cols: Columns, id: string): string | undefined {
   return Object.keys(cols).find((k) => cols[k].includes(id));
 }
 
-export function CardsView({ data, extras }: { data: BoardData; extras?: { attachments?: Map<string, number> } }) {
+export function CardsView({ data }: { data: BoardData }) {
+  const extras = { attachments: useBoardAttachmentCounts(data.board.id).data };
   const canEdit = data.myRole !== 'viewer';
   const m = useBoardMutations(data.board.id);
   const toast = useToast();

@@ -107,3 +107,14 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Notification de message : la notification non lue existante est mise à jour (dernier message, compteur `payload.count`) au lieu d'en créer une autre.
 - Rappels horaires (`run_hourly_notifications`, pg_cron `0 * * * *`) : « échéance demain », « échéance dépassée » (une fois par carte et par jour, dans le fuseau de chaque personne) et, à 18:00 heure locale, « Envoie ton rapport du jour » pour les owners et members des tableaux actifs ces 7 derniers jours (activité ou messages) qui n'ont pas envoyé leur rapport.
 - Vérifié dans PGlite avec un faux pg_cron : 0001 à 0003 appliqués deux fois, 62 contrôles d'accès et de notifications.
+
+### Phase 5 — Fichiers et discussion
+- Fichiers dans `src/features/files/`, discussion dans `src/features/chat/`.
+- Deux boutons pour joindre : « Fichier » (galerie ou documents, sans `capture`) et « Photo » (`capture="environment"`, qui ouvre directement l'appareil photo). Un seul champ avec `capture` empêcherait de choisir dans la galerie sur la plupart des téléphones.
+- La barre de progression passe par `XMLHttpRequest` vers l'API Storage (supabase-js ne donne pas la progression) ; « Annuler » interrompt l'envoi.
+- Photos : réduites à 1600 px et converties en JPEG 0,8 ; l'orientation est respectée avec `createImageBitmap(..., { imageOrientation: 'from-image' })`. Vidéos : envoyées telles quelles (50 Mo max) avec une miniature prise à 1 s, rangée à côté (`…-thumb.jpg`). Documents (PDF, Word, Excel, PowerPoint, OpenDocument, texte, CSV) : 20 Mo max.
+- `attachment_owner` reconnaît aussi le chemin de la miniature, pour que l'auteur puisse la supprimer avec la vidéo.
+- Les documents s'ouvrent dans un nouvel onglet via une URL signée ; photos et vidéos dans une visionneuse plein écran (glissement ou flèches). Suppression d'une photo ou d'une vidéo depuis la visionneuse (auteur ou owner).
+- Les @mentions sont enregistrées dans la table `mentions` dès maintenant, pour les messages et les commentaires de carte (la notification est créée par le trigger de la phase 4).
+- Appui long (500 ms) ou clic droit sur un de ses messages : Modifier (messages texte) ou Supprimer. Les observateurs lisent la discussion sans écrire.
+- Compteur de non-lus : messages des autres (hors messages système et supprimés) postérieurs à `message_reads.last_read_at`, rafraîchi toutes les 30 s et à chaque lecture.

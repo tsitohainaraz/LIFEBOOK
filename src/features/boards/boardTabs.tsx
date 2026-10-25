@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { CardsView } from './CardsView';
+import { ChatView } from '../chat/ChatView';
 import type { BoardData } from './useBoards';
 import styles from './Boards.module.css';
 
@@ -17,10 +18,10 @@ function Waiting({ children }: { children: ReactNode }) {
 }
 
 /** Onglets du tableau : Cartes · Discussion · Équipe du jour. */
-export function boardTabs(data: BoardData): BoardTab[] {
+export function boardTabs(data: BoardData, opts: { unread?: number } = {}): BoardTab[] {
   return [
     { id: 'cartes', label: 'Cartes', render: () => <CardsView data={data} /> },
-    { id: 'discussion', label: 'Discussion', render: () => <Waiting>La discussion de l'équipe arrive bientôt.</Waiting> },
+    { id: 'discussion', label: 'Discussion', badge: opts.unread, render: () => <ChatView data={data} /> },
     { id: 'equipe', label: 'Équipe du jour', render: () => <Waiting>Les rapports du jour de l'équipe arrivent bientôt.</Waiting> },
   ];
 }

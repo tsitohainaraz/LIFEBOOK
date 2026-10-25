@@ -135,7 +135,7 @@ stable
 security definer
 set search_path = ''
 as $$
-  select a.user_id from public.attachments a where a.path = p;
+  select a.user_id from public.attachments a where a.path = p or a.thumb_path = p limit 1;
 $$;
 
 -- Dossier « board_id » d'un objet Storage, si c'est bien un uuid

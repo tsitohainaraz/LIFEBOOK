@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { Placeholder } from "./pages/Placeholder";
 import { AppShell } from './components/AppShell';
 import { GuestRoute, OnboardingRoute, ProtectedRoute } from './components/RouteGuards';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -13,6 +12,9 @@ import { WeekPage } from './pages/period/WeekPage';
 import { MonthPage } from './pages/period/MonthPage';
 import { YearPage } from './pages/period/YearPage';
 import { LifePage } from './pages/life/LifePage';
+import { PastPage } from './pages/past/PastPage';
+import { ReportPage } from './pages/report/ReportPage';
+import { HealthPage } from './pages/health/HealthPage';
 
 export function App() {
   return (
@@ -35,8 +37,9 @@ export function App() {
               <Route path="mois" element={<MonthPage />} />
               <Route path="annee" element={<YearPage />} />
               <Route path="vie" element={<LifePage />} />
-              <Route path="precedent" element={<Placeholder title="Programme précédent" />} />
-              <Route path="rapport" element={<Placeholder title="Mon rapport" />} />
+              <Route path="precedent" element={<PastPage />} />
+              <Route path="rapport" element={<ReportPage />} />
+              <Route path="sante" element={<HealthPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

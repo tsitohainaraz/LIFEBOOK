@@ -13,7 +13,9 @@ const RESEND_DELAY = 60;
 export function VerifyPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { email?: string; sentAt?: number } | null;
+  const state = location.state as { email?: string; sentAt?: number; type?: 'signup' } | null;
+  // « signup » : confirmation d'un compte créé avec un mot de passe ; sinon, connexion par code.
+  const otpType = state?.type === 'signup' ? 'signup' : 'email';
   const email = state?.email ?? readPendingEmail();
   const [digits, setDigits] = useState<string[]>(() => Array(LEN).fill(''));
   const [error, setError] = useState('');
@@ -41,7 +43,7 @@ export function VerifyPage() {
     setChecking(true);
     setError('');
     setInfo('');
-    const { error: err } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+    const { error: err } = await supabase.auth.verifyOtp({ email, token: code, type: otpType });
     setChecking(false);
     if (err) {
       setError(authErrorMessage(err));
@@ -99,10 +101,11 @@ export function VerifyPage() {
   async function resend() {
     setError('');
     setInfo('');
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
+    const redirect = `${window.location.origin}/auth/callback`;
+    const { error: err } =
+      otpType === 'signup'
+        ? await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirect } })
+        : await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: redirect } });
     if (err) {
       setError(authErrorMessage(err));
       return;

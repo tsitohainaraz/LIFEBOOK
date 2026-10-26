@@ -11,6 +11,25 @@ export function authErrorMessage(err: AuthLikeError | null | undefined): string 
   const code = (err.code ?? '').toLowerCase();
   const msg = (err.message ?? '').toLowerCase();
 
+  // Mot de passe (à tester avant « invalid », que contient « Invalid login credentials »)
+  if (code === 'invalid_credentials' || msg.includes('invalid login credentials')) {
+    return 'E-mail ou mot de passe incorrect.';
+  }
+  if (code === 'user_already_exists' || code === 'email_exists' || msg.includes('already registered')) {
+    return 'Un compte existe déjà avec cet e-mail. Connecte-toi, ou touche « Mot de passe oublié ».';
+  }
+  if (code === 'email_not_confirmed' || msg.includes('email not confirmed')) {
+    return "Confirme d'abord ton adresse : ouvre l'e-mail que LifeBook t'a envoyé.";
+  }
+  if (code === 'same_password' || msg.includes('different from the old')) {
+    return 'Choisis un mot de passe différent de l’ancien.';
+  }
+  if (code === 'weak_password' || msg.includes('password should')) {
+    return 'Mot de passe trop faible : au moins 8 caractères, avec une majuscule, une minuscule et un chiffre.';
+  }
+  if (code === 'reauthentication_needed' || msg.includes('reauthentication')) {
+    return 'Pour changer ton mot de passe, reconnecte-toi puis réessaie.';
+  }
   if (code === 'otp_expired' || msg.includes('expired')) {
     return 'Code incorrect ou expiré. Vérifie les 6 chiffres ou demande un nouveau code.';
   }

@@ -571,3 +571,15 @@
   display: block;
   margin-top: 4px;
 }
+
+.joinRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--urgent);
+  background: var(--urgent-soft);
+  border-radius: var(--r-md);
+}

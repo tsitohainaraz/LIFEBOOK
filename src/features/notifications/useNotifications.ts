@@ -61,3 +61,75 @@ export function useMarkRead() {
     onSettled: () => qc.invalidateQueries({ queryKey: key(user?.id) }),
   });
 }
+
+/** Remet une notification en « non lu ». */
+export function useMarkUnread() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('notifications').update({ read_at: null }).eq('id', id);
+      if (error) throw error;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: key(user?.id) });
+      const previous = qc.getQueryData<NotificationRow[]>(key(user?.id));
+      qc.setQueryData<NotificationRow[]>(key(user?.id), (list) => (list ?? []).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
+      return { previous };
+    },
+    onError: (_e, _v, ctx) => qc.setQueryData(key(user?.id), ctx?.previous),
+    onSettled: () => qc.invalidateQueries({ queryKey: key(user?.id) }),
+  });
+}
+
+/** Types de notifications coupés (notification_prefs.muted). */
+export function useNotificationPrefs() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['notification_prefs', user?.id],
+    enabled: !!user,
+    retry: (n, err) => !isMissingTableError(err) && n < 1,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase.from('notification_prefs').select('muted').maybeSingle();
+      if (error) throw error;
+      return data?.muted ?? [];
+    },
+  });
+}
+
+export function useSaveNotificationPrefs() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const k = ['notification_prefs', user?.id];
+  return useMutation({
+    mutationFn: async (muted: string[]) => {
+      const { error } = await supabase.from('notification_prefs').upsert({ user_id: user?.id, muted }, { onConflict: 'user_id' });
+      if (error) throw error;
+    },
+    onMutate: async (muted) => {
+      await qc.cancelQueries({ queryKey: k });
+      const previous = qc.getQueryData<string[]>(k);
+      qc.setQueryData(k, muted);
+      return { previous };
+    },
+    onError: (_e, _v, ctx) => qc.setQueryData(k, ctx?.previous),
+    onSettled: () => qc.invalidateQueries({ queryKey: k }),
+  });
+}
+
+/** Accepter ou refuser une demande pour rejoindre une carte. */
+export function useAnswerJoin() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ requestId, accept }: { requestId: string; accept: boolean }) => {
+      const { error } = await supabase.rpc('answer_card_join', { p_request: requestId, p_accept: accept });
+      if (error) throw error;
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: key(user?.id) });
+      void qc.invalidateQueries({ queryKey: ['card_join_requests'] });
+      void qc.invalidateQueries({ queryKey: ['board'] });
+    },
+  });
+}

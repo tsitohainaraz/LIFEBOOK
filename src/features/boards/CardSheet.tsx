@@ -17,6 +17,7 @@ import { memberName, useBoardMutations, useCardDetails, useCardMutations, type B
 import type { BoardActivityRow, CardRow, ChecklistItemRow } from '../../types/database';
 import { FilePicker, Gallery, UploadQueue } from '../files/FileWidgets';
 import { useCardAttachments, useUploader } from '../files/useFiles';
+import { CardJoin } from './CardJoin';
 import styles from './Boards.module.css';
 
 const DAY_START = 6 * 60;
@@ -129,6 +130,7 @@ function CardDetails({ card, data, onClose }: { card: CardRow; data: BoardData; 
           })}
           {!canEdit && assigned.size === 0 && <span className="muted small">Personne.</span>}
         </div>
+        <CardJoin card={card} data={data} assigned={assigned} />
       </section>
 
       <section className={styles.section}>

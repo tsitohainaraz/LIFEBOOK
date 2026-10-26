@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { WaveBackground } from './components/WaveBackground';
 import { AppShell } from './components/AppShell';
 import { GuestRoute, OnboardingRoute, ProtectedRoute } from './components/RouteGuards';
 import { LoginPage } from './pages/auth/LoginPage';
@@ -28,7 +27,6 @@ import { NotificationsPage } from './features/notifications/NotificationsPage';
 export function App() {
   return (
     <BrowserRouter>
-      <WaveBackground />
       <AuthProvider>
         <Routes>
           <Route element={<GuestRoute />}>

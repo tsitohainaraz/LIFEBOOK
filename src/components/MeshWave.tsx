@@ -61,7 +61,10 @@ export function MeshWave({ className }: { className?: string }) {
       painted = true;
       const t = reduce ? 0 : now / 1000;
       ctx.clearRect(0, 0, W, H);
-      const horizon = H * 0.34;
+      // Respiration (le relief gonfle puis retombe, ~9 s) et léger balancement de la vue (~23 s) : comme vivant.
+      const breath = 1 + 0.28 * Math.sin(t * 0.7);
+      const sway = 0.06 * Math.sin(t * 0.27);
+      const horizon = H * (0.34 + 0.015 * Math.sin(t * 0.45));
       const focal = W * 0.9;
 
       // Projection des points : x de -1 à 1, z de 1 (près) à 5 (loin).
@@ -69,9 +72,11 @@ export function MeshWave({ className }: { className?: string }) {
         const z = 1 + (r / (ROWS - 1)) * 4;
         for (let c = 0; c < COLS; c++) {
           const x = (c / (COLS - 1)) * 2.6 - 1.3;
-          const y = 0.16 * Math.sin(x * 2.2 + t * 0.55 + z * 0.9) + 0.11 * Math.cos(z * 1.7 - t * 0.4 + x * 0.6);
+          const y =
+            breath * (0.16 * Math.sin(x * 2.2 + t * 0.55 + z * 0.9) + 0.11 * Math.cos(z * 1.7 - t * 0.4 + x * 0.6)) +
+            0.025 * Math.sin(t * 1.3 + c * 1.7 + r * 2.3);
           const i = r * COLS + c;
-          px[i] = W / 2 + (x * focal) / z;
+          px[i] = W / 2 + ((x + sway) * focal) / z;
           py[i] = horizon + ((0.95 - y) * H * 0.62) / z;
           pa[i] = Math.max(0, 1 - (z - 1) / 4.4);
         }
@@ -104,9 +109,11 @@ export function MeshWave({ className }: { className?: string }) {
       for (let i = 0; i < px.length; i++) {
         const a = pa[i];
         if (a < 0.05) continue;
-        ctx.fillStyle = color((i % COLS) / (COLS - 1), 0.35 + a * 0.65);
+        // Chaque point scintille doucement à son propre rythme.
+        const pulse = 0.75 + 0.25 * Math.sin(t * (0.8 + (i % 7) * 0.15) + i * 1.9);
+        ctx.fillStyle = color((i % COLS) / (COLS - 1), (0.35 + a * 0.65) * pulse);
         ctx.beginPath();
-        ctx.arc(px[i], py[i], 0.8 + a * 1.7, 0, 7);
+        ctx.arc(px[i], py[i], (0.8 + a * 1.7) * (0.85 + 0.3 * pulse), 0, 7);
         ctx.fill();
       }
       for (const d of dust) {

@@ -73,8 +73,9 @@ export function MeshWave({ className, horizon: horizonAt = 0.34 }: { className?:
         const z = 1 + (r / (ROWS - 1)) * 4;
         for (let c = 0; c < COLS; c++) {
           const x = (c / (COLS - 1)) * 2.6 - 1.3;
+          // Les crêtes avancent vers nous (z décroît quand t augmente) et une houle croisée les traverse.
           const y =
-            breath * (0.16 * Math.sin(x * 2.2 + t * 0.55 + z * 0.9) + 0.11 * Math.cos(z * 1.7 - t * 0.4 + x * 0.6)) +
+            breath * (0.15 * Math.sin(x * 1.8 + z * 1.6 + t * 1.25) + 0.1 * Math.cos(z * 2.1 - x * 1.1 + t * 0.9) + 0.06 * Math.sin(x * 3.4 - t * 0.7)) +
             0.025 * Math.sin(t * 1.3 + c * 1.7 + r * 2.3);
           const i = r * COLS + c;
           px[i] = W / 2 + ((x + sway) * focal) / z;

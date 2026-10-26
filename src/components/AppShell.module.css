@@ -1,4 +1,6 @@
 .app {
+  position: relative;
+  z-index: 1;
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;

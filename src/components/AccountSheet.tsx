@@ -22,6 +22,7 @@ const TIME_ZONES = [
   ['UTC', 'UTC'],
 ];
 import { Sheet } from './Sheet';
+import { AssistantAccount } from '../features/assistant/AssistantAccount';
 import { useToast } from './Toast';
 
 /** Mon compte : identité, paramètres de vie, déconnexion, suppression du compte. */
@@ -150,6 +151,8 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
           Enregistrer
         </button>
       </form>
+
+      <AssistantAccount onNavigate={onClose} />
 
       <button
         type="button"

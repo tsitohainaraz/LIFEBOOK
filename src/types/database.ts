@@ -67,6 +67,9 @@ export type ProfileRow = Timestamps & {
   health_consent_at: string | null;
   onboarding_step: number;
   onboarding_done_at: string | null;
+  /** Offre : modifiable seulement côté serveur (trigger protect_profile_plan). */
+  plan: 'free' | 'premium';
+  plan_until: string | null;
 }
 
 export type HealthProfileRow = Timestamps & {
@@ -376,6 +379,77 @@ export type NotificationRow = {
   created_at: string;
 };
 
+// ---------------------------------------------------------------------------
+// Assistante (0004_assistante.sql)
+// ---------------------------------------------------------------------------
+export type AiContext = 'home' | 'day' | 'week' | 'life' | 'guided';
+export type AiActionStatus = 'proposed' | 'accepted' | 'ignored' | 'auto_applied' | 'undone';
+export type AiMemoryKind = 'preference' | 'contrainte' | 'objectif' | 'sante';
+export type AiFeedbackReason = 'Pas clair' | 'Pas adapté à moi' | 'Faux' | 'Trop long';
+
+export type AiConversationRow = Timestamps & {
+  id: string;
+  user_id: string;
+  title: string;
+  context: AiContext;
+};
+
+export type AiMessageRow = {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  proposed_actions: Json;
+  applied: boolean;
+  provider: string | null;
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  latency_ms: number | null;
+  feedback: -1 | 0 | 1 | null;
+  feedback_reason: AiFeedbackReason | null;
+  created_at: string;
+};
+
+export type AiActionRow = {
+  id: string;
+  user_id: string;
+  message_id: string | null;
+  action_type: string;
+  payload: { [key: string]: Json | undefined };
+  inverse: Json | null;
+  status: AiActionStatus;
+  created_at: string;
+};
+
+export type AiUsageRow = { user_id: string; date: string; count: number };
+
+export type AiMemoryRow = {
+  id: string;
+  user_id: string;
+  kind: AiMemoryKind;
+  text: string;
+  source: 'user' | 'assistant';
+  created_at: string;
+};
+
+export type AiSettingsRow = Timestamps & {
+  user_id: string;
+  auto_apply: boolean;
+  use_health: boolean;
+};
+
+export type PlanLimitRow = {
+  plan: 'free' | 'premium';
+  ai_messages_per_day: number;
+  features: { [key: string]: Json | undefined };
+};
+
+export type PremiumInterestRow = { user_id: string; created_at: string };
+
+export type AiQuota = { plan: 'free' | 'premium'; daily_limit: number; used: number; remaining: number };
+
 export type BucketItemRow = Timestamps & {
   id: string;
   user_id: string;
@@ -427,6 +501,14 @@ export type Database = {
       attachments: Table<AttachmentRow, MakeInsert<AttachmentRow, 'board_id' | 'path'>>;
       mentions: Table<MentionRow, MakeInsert<MentionRow, 'user_id' | 'board_id'>>;
       notifications: Table<NotificationRow, MakeInsert<NotificationRow, 'user_id' | 'type' | 'title'>>;
+      ai_conversations: Table<AiConversationRow, Partial<AiConversationRow>>;
+      ai_messages: Table<AiMessageRow, MakeInsert<AiMessageRow, 'conversation_id' | 'role'>>;
+      ai_actions: Table<AiActionRow, MakeInsert<AiActionRow, 'action_type'>>;
+      ai_usage: Table<AiUsageRow, AiUsageRow>;
+      ai_memory: Table<AiMemoryRow, MakeInsert<AiMemoryRow, 'kind' | 'text'>>;
+      ai_settings: Table<AiSettingsRow, Partial<AiSettingsRow>>;
+      premium_interest: Table<PremiumInterestRow, Partial<PremiumInterestRow>>;
+      plan_limits: Table<PlanLimitRow, PlanLimitRow>;
     };
     Views: {
       member_profiles: { Row: MemberProfileRow; Relationships: [] };
@@ -439,6 +521,9 @@ export type Database = {
       accept_invite: { Args: { t: string }; Returns: string };
       get_invite_preview: { Args: { t: string }; Returns: InvitePreview[] };
       board_storage_bytes: { Args: { b: string }; Returns: number };
+      ai_quota: { Args: Record<string, never>; Returns: AiQuota[] };
+      ai_take_quota: { Args: Record<string, never>; Returns: boolean };
+      get_insights: { Args: { days?: number }; Returns: Json };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

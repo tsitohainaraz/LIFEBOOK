@@ -195,9 +195,9 @@
 ## 15. Suggestions intelligentes (V2 à V3)
 
 - [ ] **V2** Repérer le temps libre et proposer de le remplir : santé, objectif en retard, domaine faible de la roue de la vie.
-- [ ] **V2** Placer automatiquement les étapes d'un objectif dans les créneaux libres.
+- [x] **V2** Placer automatiquement les étapes d’un objectif dans les créneaux libres (planification guidée, section 27).
 - [ ] **V3** Bilan hebdomadaire rédigé automatiquement.
-- [ ] **V3** Assistant conversationnel : « Planifie ma semaine ».
+- [x] **V3** Assistant conversationnel : « Planifie ma semaine » (voir section 27).
 
 ## 16. Statistiques
 
@@ -301,3 +301,20 @@
 - [ ] **V2** Notifications push sur le téléphone (étape 10 : Web Push et Edge Function, colonne `notifications.pushed_at` prévue).
 
 **Tables :** `boards`, `board_members`, `board_invites`, `lists`, `cards`, `card_members`, `board_labels`, `card_labels`, `checklist_items`, `card_comments`, `board_activity` (0002_tableaux.sql) ; `attachments`, `messages`, `message_reads`, `mentions`, `daily_reports`, `notifications` (0003_equipe.sql) ; colonne `tasks.card_id` ; bucket privé `board-files`.
+
+## 27. Assistante de planification (IA)
+
+- [x] **V1** Carte « Ton assistante » sur l'accueil, sous le cercle Maintenant : champ, dictée (fr-FR), 4 suggestions ; « Planifier en 3 min » le matin si la journée est vide.
+- [x] **V1** Chat plein écran `/assistante` : conversations (liste, suppression), « L'assistante réfléchit… », messages restants, avis Utile / Pas utile (Pas clair, Pas adapté à moi, Faux, Trop long), mention « L'assistante peut se tromper. Elle ne remplace pas l'avis d'un médecin. »
+- [x] **V1** Actions proposées, jamais appliquées sans accord : ajouter, déplacer, raccourcir, retirer, modifier une tâche, programme d'une journée, priorités du jour, objectif, étapes, souvenir ; aperçu de la frise ; Appliquer, Ignorer, Tout appliquer.
+- [x] **V1** Mode automatique (désactivé par défaut) : changements de tâches appliqués tout de suite, bandeau « N changements appliqués » et Annuler pendant 10 s.
+- [x] **V1** Planification guidée `/planifier-demain` : une question par écran (énergie, indispensable, rendez-vous, rêve, sport, réveil, plus tâche bloquée et objectif urgent, 8 au maximum), journée construite par le planificateur, explication, ajustement en langage courant, Valider ou Recommencer ; fonctionne sans IA.
+- [x] **V1** Réorganisation de la fin de journée (retard de plus de 30 min ou 2 reports) ; report du soir (Garder, Plus tard, Abandonner) ; « Planifier ma vie avec l'assistante » dans /vie ; « Demander à l'assistante » dans /jour, /semaine et /vie.
+- [x] **V1** « Ce que l'assistante sait de moi » : souvenirs, données de santé (résumé en mots, jamais de mesure), mode automatique, Tout effacer.
+- [x] **V1** Offre Gratuite (30 messages par jour), Premium (200) « bientôt disponible » avec « Je suis intéressé(e) ».
+- [x] **V1** Détresse : détection en français et en malgache avant tout appel, réponse chaleureuse sans action ; contacts d'aide à remplir dans `src/config/helpResources.ts` (vide : aucun numéro inventé).
+- [ ] **V2** Numéros d'aide vérifiés pour Madagascar ; Premium payant (Anthropic) ; prières et rendez-vous de planification comme éléments fixes.
+
+**Serveur :** Edge Function `assistant` (Groq `llama-3.3-70b-versatile`, secours OpenRouter, Anthropic pour le premium), modes `chat`, `guided_parse`, `explain_plan`, `adjust_plan`, `replan_rest_of_day` ; dates et heures calculées par le code ; quota par jour local.
+
+**Tables :** `plan_limits`, `ai_conversations`, `ai_messages`, `ai_actions`, `ai_usage`, `ai_memory`, `ai_settings`, `premium_interest`, colonnes `profiles.plan` et `plan_until`, fonctions `ai_quota`, `ai_take_quota`, `get_insights`, vue `ai_stats_daily` (0004_assistante.sql).

@@ -12,6 +12,7 @@ import { ageAt, weeksLivedAndLeft } from '../../utils/life';
 import { lifePeriods, periodState, toggleValue, wheelScore, wheelSummary } from '../../utils/lifeplan';
 import type { GoalDomain, GoalRow } from '../../types/database';
 import styles from './Life.module.css';
+import { AskAssistantButton } from '../../features/assistant/AssistantCard';
 import { currentDate, nowISO } from '../../lib/serverTime';
 
 const SAVE_DELAY = 800;
@@ -68,6 +69,7 @@ export function LifePage() {
           </div>
         </div>
       </section>
+      <AskAssistantButton context="life" label="Planifier ma vie avec l'assistante" send="Aide-moi à planifier ma vie : mes rêves, mes échéances et les grandes étapes." />
 
       {planQ.isLoading ? (
         <LoadingState label="Chargement de ton plan de vie…" />

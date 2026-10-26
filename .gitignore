@@ -5,3 +5,6 @@ dist
 *.log
 coverage
 .vite
+
+# CLI Supabase (lien local du projet)
+supabase/.temp/

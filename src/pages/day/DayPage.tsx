@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { cardAsTask, isCardTask, useLinkedCards, useMyCards, type MyCard } from '../../features/boards/myCards';
 import { markCardDone, useCardDonePrompt } from '../../features/boards/CardDonePrompt';
 import styles from './Day.module.css';
+import { AskAssistantButton } from '../../features/assistant/AssistantCard';
 import { currentDate } from '../../lib/serverTime';
 
 const START = 5;
@@ -81,6 +82,7 @@ export function DayPage() {
           ›
         </button>
       </div>
+      <AskAssistantButton context="day" draft={`Aide-moi à organiser ma journée du ${label}.`} />
 
       <div className={styles.titleRow}>
         <div className={styles.title}>

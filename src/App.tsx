@@ -19,6 +19,9 @@ import { BoardsPage } from './features/boards/BoardsPage';
 import { BoardPage } from './features/boards/BoardPage';
 import { CardSheet } from './features/boards/CardSheet';
 import { InviteGate } from './features/boards/InvitePage';
+import { GuidedPage } from './features/guided/GuidedPage';
+import { AssistantPage } from './features/assistant/AssistantPage';
+import { MemoryPage } from './features/assistant/MemoryPage';
 import { NotificationsPage } from './features/notifications/NotificationsPage';
 
 export function App() {
@@ -36,6 +39,10 @@ export function App() {
             <Route path="/onboarding" element={<OnboardingPage />} />
           </Route>
           <Route element={<ProtectedRoute />}>
+            <Route path="/assistante" element={<AssistantPage />} />
+            <Route path="/assistante/memoire" element={<MemoryPage />} />
+            <Route path="/planifier-demain" element={<GuidedPage />} />
+            <Route path="/assistante/:conversationId" element={<AssistantPage />} />
             <Route element={<AppShell />}>
               <Route index element={<HomePage />} />
               <Route path="jour" element={<DayPage />} />

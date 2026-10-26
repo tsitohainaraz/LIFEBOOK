@@ -169,3 +169,13 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - `adjust_plan` agit sur le programme proposé (pas encore enregistré, identifiants `p1`, `p2`…) et ne peut modifier que la date de ce programme.
 - Chaque échange est enregistré dans `ai_messages` (message de l'utilisateur, puis réponse avec fournisseur, modèle, tokens et durée) ; chaque action proposée dans `ai_actions` (`action_type`, `payload`, `inverse`). Les modes guidés utilisent une conversation `guided`, la réorganisation une conversation `day`.
 - Historique envoyé au modèle : les 12 derniers messages de la conversation (texte seulement).
+
+### Phase 4 — Le chat
+- Code : `src/features/assistant/` (carte de l'accueil, page plein écran, cartes d'action, dictée, application des actions). La carte « Ton assistante » est placée juste sous le cercle « Maintenant ».
+- Le chat plein écran (`/assistante`, `/assistante/:id`) est hors de la coquille de l'application (pas d'onglets en bas), avec son propre fournisseur de messages courts.
+- Le premier message venant de l'accueil est passé dans l'état de navigation puis envoyé une seule fois ; les boutons « Demander à l'assistante » (Journée, Semaine, Ma vie) préremplissent le champ sans l'envoyer.
+- Les actions affichées après rechargement viennent d'`ai_actions` (leur statut y est mis à jour : accepted, ignored, auto_applied, undone) ; leur ordre est gardé dans `payload.index`.
+- Application : les tâches passent par `useAddTasks`, `useUpdateTask`, `useDeleteTask` ; les objectifs et étapes par `useGoalMutations` ; les priorités du jour sont enregistrées dans `plans` (period = day ; l'intention dans `theme`, comme dans /jour). L'inverse est recalculé par l'application à partir des tâches réelles juste avant la modification (les identifiants créés remplacent les références `new-…`).
+- Mode automatique : seules les actions sur les tâches sont appliquées tout de suite (statut auto_applied) ; bandeau « N changements appliqués » avec Annuler pendant 10 s. Les objectifs, étapes, priorités et souvenirs attendent toujours « Appliquer ».
+- La suggestion « Réorganise le reste de ma journée » appelle directement le mode `replan_rest_of_day`.
+- Détresse : sous la réponse, les contacts de `helpResources.ts` ; tant que ce fichier est vide, une phrase générique (proche, médecin, urgences), sans numéro.

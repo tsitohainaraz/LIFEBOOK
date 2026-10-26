@@ -18,6 +18,7 @@ import { REASONS, WHO_WEEKLY_MINUTES, healthReasons, mustAskDoctor, suggestedSpo
 import { daysUsedAndLeft, lifeCountdown, lifeSummary } from '../../utils/life';
 import { collectPlannedItems, freeMinutesBeforeNext, pickNow, taskEnd, type NowResult, type PlannedItem } from '../../utils/now';
 import { Upcoming } from './Upcoming';
+import { AssistantCard } from '../../features/assistant/AssistantCard';
 import { firstFreeSlot } from '../../utils/schedule';
 import type { Category, ProfileRow, TaskRow } from '../../types/database';
 import styles from './Home.module.css';
@@ -115,6 +116,8 @@ export function HomePage() {
           planned={planned}
         />
       )}
+
+      <AssistantCard />
 
       <div className="card">
         <div className="between">

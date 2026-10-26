@@ -30,6 +30,7 @@ import { CategorySplit } from '../day/CategorySplit';
 import { useLinkedCards, useMyCards, type MyCard } from '../../features/boards/myCards';
 import { useCardDonePrompt } from '../../features/boards/CardDonePrompt';
 import styles from './Period.module.css';
+import { AskAssistantButton } from '../../features/assistant/AssistantCard';
 import { currentDate } from '../../lib/serverTime';
 
 const H0 = 6;
@@ -83,6 +84,7 @@ export function WeekPage() {
           </button>
         </div>
       </div>
+      <AskAssistantButton context="week" draft="Aide-moi à organiser ma semaine." />
       <p className="muted small" style={{ margin: 0 }}>
         Semaine {isoWeekNumber(week)} · du {fmtDate(week, 'EEEE d MMMM')} au {fmtDate(end, 'EEEE d MMMM')}
       </p>

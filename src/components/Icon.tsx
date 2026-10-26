@@ -90,6 +90,15 @@ const PATHS = {
       <path d="M10 20a2 2 0 0 0 4 0" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </>
+  ),
+  send: <path d="M4 12l16-8-6 16-2.5-6.5z" />,
+  spark: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />,
+  list: <path d="M8 6h12M8 12h12M8 18h12M4 6h0M4 12h0M4 18h0" />,
 } as const;
 
 export type IconName = keyof typeof PATHS;

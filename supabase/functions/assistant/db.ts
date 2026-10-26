@@ -148,7 +148,7 @@ export function supabaseDb(sb: SupabaseClient, userId: string): AssistantDb {
       const rows = must(
         await sb
           .from('ai_actions')
-          .insert(actions.map((a) => ({ user_id: userId, message_id: messageId, action_type: a.type, payload: a, inverse: a.type === 'task_ops' ? a.inverse : null })))
+          .insert(actions.map((a, index) => ({ user_id: userId, message_id: messageId, action_type: a.type, payload: { ...a, index }, inverse: a.type === 'task_ops' ? a.inverse : null })))
           .select('id'),
       ) as { id: string }[];
       return rows.map((r) => r.id);

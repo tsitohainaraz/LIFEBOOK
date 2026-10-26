@@ -13,7 +13,7 @@ export interface AssistantNavState {
 }
 
 /** Carte « Ton assistante » de l'accueil : champ, micro et 4 suggestions. */
-export function AssistantCard() {
+export function AssistantCard({ planToday = false }: { planToday?: boolean }) {
   const navigate = useNavigate();
   const [text, setText] = useState('');
   const speech = useSpeech((t) => setText((v) => (v ? `${v} ${t}` : t)));
@@ -28,6 +28,11 @@ export function AssistantCard() {
         </span>
         <div className="label">Ton assistante</div>
       </div>
+      {planToday && (
+        <button type="button" className="btn primary block" onClick={() => navigate('/planifier-demain?jour=aujourdhui')}>
+          Planifier en 3 min
+        </button>
+      )}
       <form
         className={styles.inputRow}
         onSubmit={(e) => {
@@ -64,7 +69,8 @@ export function AssistantCard() {
             type="button"
             className={styles.suggestion}
             onClick={() => {
-              if (s.key === 'replan') open({ replan: true, context: 'day' });
+              if (s.key === 'guided') navigate('/planifier-demain');
+              else if (s.key === 'replan') open({ replan: true, context: 'day' });
               else open({ send: s.label, context: 'home' });
             }}
           >

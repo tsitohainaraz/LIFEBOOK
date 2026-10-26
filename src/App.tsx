@@ -19,6 +19,7 @@ import { BoardsPage } from './features/boards/BoardsPage';
 import { BoardPage } from './features/boards/BoardPage';
 import { CardSheet } from './features/boards/CardSheet';
 import { InviteGate } from './features/boards/InvitePage';
+import { GuidedPage } from './features/guided/GuidedPage';
 import { AssistantPage } from './features/assistant/AssistantPage';
 import { NotificationsPage } from './features/notifications/NotificationsPage';
 
@@ -38,6 +39,7 @@ export function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/assistante" element={<AssistantPage />} />
+            <Route path="/planifier-demain" element={<GuidedPage />} />
             <Route path="/assistante/:conversationId" element={<AssistantPage />} />
             <Route element={<AppShell />}>
               <Route index element={<HomePage />} />

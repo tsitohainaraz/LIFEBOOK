@@ -117,7 +117,7 @@ export function HomePage() {
         />
       )}
 
-      <AssistantCard />
+      <AssistantCard planToday={!tasksQ.isLoading && tasks.length === 0 && nm < 12 * 60} />
 
       <div className="card">
         <div className="between">

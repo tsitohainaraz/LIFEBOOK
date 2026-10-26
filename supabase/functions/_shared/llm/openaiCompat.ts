@@ -10,6 +10,8 @@ export interface OpenAICompatOptions {
   apiKey: string;
   model: string;
   extraHeaders?: Record<string, string>;
+  /** Champs propres au fournisseur ajoutés au corps de la requête (ex. NVIDIA : réflexion désactivée). */
+  extraBody?: Record<string, unknown>;
   fetchImpl?: FetchLike;
   timeoutMs?: number;
 }
@@ -65,6 +67,7 @@ export function makeOpenAICompatProvider(o: OpenAICompatOptions): LlmProvider {
         ...(req.tools?.length ? { tools: toOpenAITools(req.tools), tool_choice: 'auto' } : {}),
         max_tokens: req.maxTokens ?? 1200,
         temperature: req.temperature ?? 0.4,
+        ...(o.extraBody ?? {}),
       };
       const send = async (payload: typeof body): Promise<Response> => {
         const ctrl = new AbortController();

@@ -209,3 +209,8 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - Lu / non lu : filtres Toutes / Non lues / Lues avec compteurs, « Tout marquer comme lu », bouton « Marquer lu / Marquer non lu » sur chaque notification (read_at remis à vide ; seule cette colonne est modifiable).
 - Demande pour rejoindre une carte : table `card_join_requests` sans écriture directe ; fonctions `request_card_join` (tout membre du tableau, y compris lecteur, non encore assigné ; une seule demande en attente ; relance possible après un refus) et `answer_card_join` (créateur de la carte ou propriétaire du tableau). Accepter assigne la personne, qui reçoit « … t'a assigné » ; refuser envoie « Demande refusée ». Une fois traitée, la demande passe en « lu » chez tous ceux qui pouvaient répondre.
 - Vérifié dans PGlite : 0001 à 0005 appliqués deux fois, 26 contrôles propres à 0005 (dont la suppression d'un tableau entier).
+
+## Assistante : fournisseur NVIDIA et secours élargi
+- NVIDIA (build.nvidia.com, API compatible OpenAI) est essayé en premier quand le secret `NVIDIA_API_KEY` existe ; modèle `NVIDIA_MODEL`, par défaut `nvidia/nemotron-3-ultra-550b-a55b` (choisi pour les appels d'outils). La « réflexion » du modèle est désactivée (`chat_template_kwargs.enable_thinking = false`) pour des réponses plus rapides ; délai d'attente 60 s.
+- Ordre : Anthropic (premium + clé), NVIDIA, Groq, OpenRouter. Toute erreur d'un fournisseur (429, 5xx, réseau, mais aussi 400, 401, 404) fait passer au suivant ; l'erreur finale réunit les causes de chaque fournisseur, et l'application l'affiche en petit (« Détail : … »).
+- Endpoints gratuits : limites de requêtes par minute, et usage commercial à vérifier dans les conditions de NVIDIA avant une mise en production.

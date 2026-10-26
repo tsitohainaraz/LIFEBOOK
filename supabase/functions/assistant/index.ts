@@ -42,6 +42,8 @@ Deno.serve(async (req) => {
   const quota = await db.quota().catch(() => null);
   const providers = providersFor(
     {
+      NVIDIA_API_KEY: Deno.env.get('NVIDIA_API_KEY'),
+      NVIDIA_MODEL: Deno.env.get('NVIDIA_MODEL'),
       GROQ_API_KEY: Deno.env.get('GROQ_API_KEY'),
       OPENROUTER_API_KEY: Deno.env.get('OPENROUTER_API_KEY'),
       OPENROUTER_FREE_MODEL: Deno.env.get('OPENROUTER_FREE_MODEL'),

@@ -1,6 +1,7 @@
 // Tests Deno des adaptateurs d'IA, avec des fournisseurs simulés (aucun appel réseau).
 import { makeAnthropic, toAnthropicMessages, type AnthropicClientLike } from './anthropic.ts';
 import { makeGroq } from './groq.ts';
+import { makeNvidia } from './nvidia.ts';
 import { makeOpenRouter } from './openrouter.ts';
 import { chatWithFallback, providersFor } from './router.ts';
 import { ALL_TOOLS, toAnthropicTools, toOpenAITools } from './tools.ts';
@@ -66,20 +67,42 @@ Deno.test('Secours : Groq 429 → OpenRouter avec OPENROUTER_FREE_MODEL', async 
   eq(res.text, 'Salut');
 });
 
-Deno.test('Secours : Groq 503 ou réseau coupé → OpenRouter ; 400 → pas de secours', async () => {
+Deno.test('Secours : 503, réseau coupé, 400 ou clé refusée → fournisseur suivant ; erreur du dernier renvoyée', async () => {
   const or = makeOpenRouter('o', 'm', async () => okResponse({ choices: [{ message: { content: 'ok' } }] }));
-  const g503 = makeGroq('g', async () => new Response('', { status: 503 }));
-  eq((await chatWithFallback([g503, or], { system: 's', messages: [] })).provider, 'openrouter');
-  const gNet = makeGroq('g', () => Promise.reject(new TypeError('connexion refusée')));
-  eq((await chatWithFallback([gNet, or], { system: 's', messages: [] })).provider, 'openrouter');
+  for (const failing of [
+    makeGroq('g', async () => new Response('', { status: 503 })),
+    makeGroq('g', () => Promise.reject(new TypeError('connexion refusée'))),
+    makeGroq('g', async () => new Response('mauvaise requête', { status: 400 })),
+    makeNvidia('n', undefined, async () => new Response('clé invalide', { status: 401 })),
+  ]) {
+    eq((await chatWithFallback([failing, or], { system: 's', messages: [] })).provider, 'openrouter');
+  }
   const g400 = makeGroq('g', async () => new Response('mauvaise requête', { status: 400 }));
+  const n401 = makeNvidia('n', undefined, async () => new Response('clé invalide', { status: 401 }));
   let thrown: unknown;
   try {
-    await chatWithFallback([g400, or], { system: 's', messages: [] });
+    await chatWithFallback([n401, g400], { system: 's', messages: [] });
   } catch (e) {
     thrown = e;
   }
-  ok(thrown instanceof LlmError && thrown.status === 400, '400 doit être renvoyé sans secours');
+  ok(thrown instanceof LlmError && thrown.status === 400 && thrown.message.includes('nvidia a répondu 401'), 'toutes les causes sont gardées');
+});
+
+Deno.test('NVIDIA : adresse, modèle par défaut, réflexion désactivée', async () => {
+  let url = '';
+  let sent: Record<string, unknown> = {};
+  const nv = makeNvidia('cle', undefined, async (u, init) => {
+    url = u;
+    sent = JSON.parse(String(init.body));
+    return okResponse({ choices: [{ message: { content: 'Bonjour' } }] });
+  });
+  const res = await nv.chat({ system: 's', messages: [{ role: 'user', content: 'x' }], tools: ALL_TOOLS });
+  eq(url, 'https://integrate.api.nvidia.com/v1/chat/completions');
+  eq(sent.model, 'nvidia/nemotron-3-ultra-550b-a55b');
+  eq(sent.chat_template_kwargs, { enable_thinking: false });
+  ok(Array.isArray(sent.tools), 'outils envoyés');
+  eq(res.provider, 'nvidia');
+  eq(makeNvidia('cle', 'autre/modele').model, 'autre/modele');
 });
 
 Deno.test('Groq : appel d’outil mal formé (400 tool_use_failed) → un nouvel essai', async () => {
@@ -104,6 +127,8 @@ Deno.test('Routage : Anthropic seulement si premium ET clé présente', () => {
   eq(premium.map((p) => p.name), ['anthropic', 'groq', 'openrouter']);
   eq(premium[0].model, 'claude-opus-5-5');
   eq(providersFor({ ...env, ANTHROPIC_API_KEY: 'a', ANTHROPIC_MODEL: 'claude-sonnet-5-5' }, true)[0].model, 'claude-sonnet-5-5');
+  eq(providersFor({ ...env, NVIDIA_API_KEY: 'n' }, false).map((p) => p.name), ['nvidia', 'groq', 'openrouter']);
+  eq(providersFor({ ...env, NVIDIA_API_KEY: 'n', ANTHROPIC_API_KEY: 'a' }, true).map((p) => p.name), ['anthropic', 'nvidia', 'groq', 'openrouter']);
 });
 
 function mockAnthropic(responses: unknown[]): { client: AnthropicClientLike; calls: Record<string, unknown>[] } {

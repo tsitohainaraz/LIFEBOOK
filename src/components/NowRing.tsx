@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { MeshWave } from './MeshWave';
 import { hms, toTime } from '../utils/dates';
 import { phrase, type NowResult } from '../utils/now';
 import styles from './NowRing.module.css';
@@ -66,6 +67,7 @@ export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, b
     const done = mode === 'done';
     return (
       <section className={`${styles.card} ${styles.calm}`} aria-live="polite">
+        <MeshWave className={styles.mesh} />
         <div className={styles.tag}>
           <i />
           {done ? 'JOURNÉE ACCOMPLIE' : 'TEMPS LIBRE'}
@@ -116,6 +118,7 @@ export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, b
 
   return (
     <section className={`${styles.card} ${tone}`} aria-live="polite">
+        <MeshWave className={styles.mesh} />
       <div className={styles.tag}>
         <i />
         {tag}

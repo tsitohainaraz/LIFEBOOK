@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useId } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,9 +44,10 @@ export function useChatRealtime(boardId: string, onNew: (m: MessageRow) => void)
   const qc = useQueryClient();
   const onNewRef = useRef(onNew);
   onNewRef.current = onNew;
+  const instance = useId();
   useEffect(() => {
     const channel = supabase
-      .channel(`chat:${boardId}`)
+      .channel(`chat:${boardId}:${instance}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `board_id=eq.${boardId}` }, (p) => {
         const m = p.new as MessageRow;
         upsertMessage(qc, boardId, m);
@@ -59,7 +60,7 @@ export function useChatRealtime(boardId: string, onNew: (m: MessageRow) => void)
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [boardId, qc]);
+  }, [boardId, qc, instance]);
 }
 
 export function useMessageAttachments(boardId: string, messageIds: string[]) {

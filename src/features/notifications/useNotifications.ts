@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,11 +12,14 @@ const key = (uid: string | undefined) => ['notifications', uid];
 export function useNotifications() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  // Nom unique par composant (la cloche et la page écoutent en même temps) : supabase-js réutilise
+  // un canal du même nom et refuse d'y ajouter un écouteur après l'abonnement.
+  const instance = useId();
 
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`notifications:${user.id}`)
+      .channel(`notifications:${user.id}:${instance}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
         void qc.invalidateQueries({ queryKey: key(user.id) });
       })
@@ -24,7 +27,7 @@ export function useNotifications() {
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [user, qc]);
+  }, [user, qc, instance]);
 
   return useQuery({
     queryKey: key(user?.id),

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,10 +23,11 @@ const doneListIds = (data: BoardData) => data.lists.filter((l) => /^fait$/i.test
 
 function useTeamReports(boardId: string, date: string) {
   const qc = useQueryClient();
+  const instance = useId();
   // Temps réel : un rapport envoyé apparaît tout de suite pour l'équipe.
   useEffect(() => {
     const ch = supabase
-      .channel(`reports:${boardId}`)
+      .channel(`reports:${boardId}:${instance}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_reports', filter: `board_id=eq.${boardId}` }, () => {
         void qc.invalidateQueries({ queryKey: ['team-reports', boardId] });
       })
@@ -34,7 +35,7 @@ function useTeamReports(boardId: string, date: string) {
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [boardId, qc]);
+  }, [boardId, qc, instance]);
   return useQuery({
     queryKey: ['team-reports', boardId, date],
     queryFn: async () => {

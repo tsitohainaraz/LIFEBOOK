@@ -19,7 +19,8 @@ function color(u: number, alpha: number): string {
   return `rgba(${c[0]},${c[1]},${c[2]},${alpha.toFixed(3)})`;
 }
 
-export function MeshWave({ className }: { className?: string }) {
+/** `horizon` : hauteur de la ligne d'horizon (0 = haut, 1 = bas) dans la zone dessinée. */
+export function MeshWave({ className, horizon: horizonAt = 0.34 }: { className?: string; horizon?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function MeshWave({ className }: { className?: string }) {
       // Respiration (le relief gonfle puis retombe, ~9 s) et léger balancement de la vue (~23 s) : comme vivant.
       const breath = 1 + 0.28 * Math.sin(t * 0.7);
       const sway = 0.06 * Math.sin(t * 0.27);
-      const horizon = H * (0.34 + 0.015 * Math.sin(t * 0.45));
+      const horizon = H * (horizonAt + 0.015 * Math.sin(t * 0.45));
       const focal = W * 0.9;
 
       // Projection des points : x de -1 à 1, z de 1 (près) à 5 (loin).
@@ -129,7 +130,7 @@ export function MeshWave({ className }: { className?: string }) {
       cancelAnimationFrame(raf);
       ro?.disconnect();
     };
-  }, []);
+  }, [horizonAt]);
 
   return <canvas ref={ref} className={className} aria-hidden="true" />;
 }

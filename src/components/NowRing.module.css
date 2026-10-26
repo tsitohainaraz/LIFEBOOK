@@ -167,15 +167,16 @@
   }
 }
 
-/* Maillage animé derrière le cercle (sous le contenu, au-dessus du fond de la carte) */
+/* Maillage animé derrière le cercle seulement, fondu en rond */
 .mesh {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: -16%;
+  top: -16%;
+  width: 132%;
+  height: 132%;
   z-index: -1;
-  opacity: 0.9;
+  opacity: 0.85;
   pointer-events: none;
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 70%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(circle at 50% 52%, #000 38%, transparent 68%);
+  -webkit-mask-image: radial-gradient(circle at 50% 52%, #000 38%, transparent 68%);
 }

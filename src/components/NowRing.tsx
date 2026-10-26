@@ -67,12 +67,12 @@ export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, b
     const done = mode === 'done';
     return (
       <section className={`${styles.card} ${styles.calm}`} aria-live="polite">
-        <MeshWave className={styles.mesh} />
         <div className={styles.tag}>
           <i />
           {done ? 'JOURNÉE ACCOMPLIE' : 'TEMPS LIBRE'}
         </div>
         <div className={styles.wrap}>
+          <MeshWave className={styles.mesh} horizon={0.2} />
           {ring}
           <div className={styles.inner}>
             <small>{done ? 'tout est fait' : 'rien de prévu'}</small>
@@ -118,12 +118,12 @@ export function NowRing({ result, nowMin, onFinish, onLater, onPlan, onReport, b
 
   return (
     <section className={`${styles.card} ${tone}`} aria-live="polite">
-        <MeshWave className={styles.mesh} />
       <div className={styles.tag}>
         <i />
         {tag}
       </div>
       <div className={styles.wrap}>
+          <MeshWave className={styles.mesh} horizon={0.2} />
         {ring}
         <div className={styles.inner}>
           <small>{lbl}</small>

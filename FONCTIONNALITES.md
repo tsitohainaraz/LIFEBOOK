@@ -195,9 +195,9 @@
 ## 15. Suggestions intelligentes (V2 à V3)
 
 - [ ] **V2** Repérer le temps libre et proposer de le remplir : santé, objectif en retard, domaine faible de la roue de la vie.
-- [ ] **V2** Placer automatiquement les étapes d'un objectif dans les créneaux libres.
+- [x] **V2** Placer automatiquement les étapes d’un objectif dans les créneaux libres (planification guidée, section 27).
 - [ ] **V3** Bilan hebdomadaire rédigé automatiquement.
-- [ ] **V3** Assistant conversationnel : « Planifie ma semaine ».
+- [x] **V3** Assistant conversationnel : « Planifie ma semaine » (voir section 27).
 
 ## 16. Statistiques
 

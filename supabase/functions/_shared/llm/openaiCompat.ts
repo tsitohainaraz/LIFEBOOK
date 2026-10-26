@@ -66,25 +66,33 @@ export function makeOpenAICompatProvider(o: OpenAICompatOptions): LlmProvider {
         max_tokens: req.maxTokens ?? 1200,
         temperature: req.temperature ?? 0.4,
       };
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), o.timeoutMs ?? 45_000);
-      let res: Response;
-      try {
-        res = await doFetch(o.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${o.apiKey}`, ...(o.extraHeaders ?? {}) },
-          body: JSON.stringify(body),
-          signal: ctrl.signal,
-        });
-      } catch (e) {
-        throw new LlmError(`Réseau indisponible (${o.name}) : ${e instanceof Error ? e.message : String(e)}`, o.name);
-      } finally {
-        clearTimeout(timer);
-      }
+      const send = async (payload: typeof body): Promise<Response> => {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), o.timeoutMs ?? 45_000);
+        try {
+          return await doFetch(o.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${o.apiKey}`, ...(o.extraHeaders ?? {}) },
+            body: JSON.stringify(payload),
+            signal: ctrl.signal,
+          });
+        } catch (e) {
+          throw new LlmError(`Réseau indisponible (${o.name}) : ${e instanceof Error ? e.message : String(e)}`, o.name);
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+      let res = await send(body);
+      let detail = '';
       if (!res.ok) {
-        const detail = (await res.text().catch(() => '')).slice(0, 300);
-        throw new LlmError(`${o.name} a répondu ${res.status} : ${detail}`, o.name, res.status);
+        detail = (await res.text().catch(() => '')).slice(0, 300);
+        // Appel d'outil mal formé par le modèle (fréquent avec Llama sur Groq) : un seul nouvel essai, plus déterministe.
+        if (res.status === 400 && /tool_use_failed|failed_generation/.test(detail)) {
+          res = await send({ ...body, temperature: 0 });
+          if (!res.ok) detail = (await res.text().catch(() => '')).slice(0, 300);
+        }
       }
+      if (!res.ok) throw new LlmError(`${o.name} a répondu ${res.status} : ${detail}`, o.name, res.status);
       return parseOpenAIResponse((await res.json()) as OAResponse, o.name, o.model);
     },
   };

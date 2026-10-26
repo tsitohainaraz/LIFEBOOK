@@ -82,6 +82,20 @@ Deno.test('Secours : Groq 503 ou réseau coupé → OpenRouter ; 400 → pas de 
   ok(thrown instanceof LlmError && thrown.status === 400, '400 doit être renvoyé sans secours');
 });
 
+Deno.test('Groq : appel d’outil mal formé (400 tool_use_failed) → un nouvel essai', async () => {
+  const temps: number[] = [];
+  const groq = makeGroq('g', async (_u, init) => {
+    const b = JSON.parse(String(init.body));
+    temps.push(b.temperature);
+    return temps.length === 1
+      ? new Response('{"error":{"code":"tool_use_failed","message":"Failed to call a function"}}', { status: 400 })
+      : okResponse({ choices: [{ message: { content: 'Ça marche' } }] });
+  });
+  const res = await groq.chat({ system: 's', messages: [{ role: 'user', content: 'x' }], tools: ALL_TOOLS });
+  eq(res.text, 'Ça marche');
+  eq(temps, [0.4, 0]);
+});
+
 Deno.test('Routage : Anthropic seulement si premium ET clé présente', () => {
   const env = { GROQ_API_KEY: 'g', OPENROUTER_API_KEY: 'o', OPENROUTER_FREE_MODEL: 'm' };
   eq(providersFor(env, true).map((p) => p.name), ['groq', 'openrouter']);

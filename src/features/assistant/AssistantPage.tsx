@@ -118,7 +118,9 @@ function AssistantChat() {
       if (res.quota_exceeded) setRemaining(0);
       const id = res.message_id ?? `local-a-${Date.now()}`;
       if (res.crisis) setCrisisIds((s) => new Set(s).add(id));
-      setLocal((l) => [...l, { id, role: 'assistant', content: res.reply, actions: res.proposed_actions, feedback: null, feedback_reason: null, crisis: res.crisis }]);
+      // Panne d'un fournisseur : la cause s'affiche en petit pour pouvoir la signaler.
+      const shown = !res.ai && !res.quota_exceeded && !res.crisis && res.errors?.length ? `${res.reply}\n\nDétail : ${res.errors[0]}` : res.reply;
+      setLocal((l) => [...l, { id, role: 'assistant', content: shown, actions: res.proposed_actions, feedback: null, feedback_reason: null, crisis: res.crisis }]);
       void autoApply(res);
       if (res.conversation_id && res.conversation_id !== conversationId) {
         navigate(`/assistante/${res.conversation_id}`, { replace: true, state: { context } });

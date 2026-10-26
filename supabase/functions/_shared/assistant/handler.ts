@@ -265,6 +265,13 @@ async function toolLoop(deps: Deps, system: string, messages: LlmMessage[], tool
   };
 }
 
+/** Cause d'une panne, écrite dans les journaux de la fonction et renvoyée (sans contenu sensible). */
+export function diagnostic(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  console.error('assistant: fournisseur indisponible', msg);
+  return msg.replace(/Bearers+S+/gi, 'Bearer ***').replace(/(gsk|sk-or|sk-ant|sbp)_[A-Za-z0-9-_]+/g, '***').slice(0, 300);
+}
+
 function baseResponse(reply: string, extra: Partial<AssistantResponse> = {}): AssistantResponse {
   return { reply, proposed_actions: [], crisis: false, quota_exceeded: false, ai: true, remaining: null, ...extra };
 }
@@ -321,8 +328,8 @@ async function chatMode(req: AssistantRequest, deps: Deps): Promise<AssistantRes
   let out: LoopResult;
   try {
     out = await toolLoop(deps, buildSystemPrompt(l.context, 'chat', context), messages, ALL_TOOLS, l, state);
-  } catch {
-    return baseResponse(UNAVAILABLE_MESSAGE, { conversation_id: conversationId, ai: false, remaining: (await db.quota())?.remaining ?? null });
+  } catch (e) {
+    return baseResponse(UNAVAILABLE_MESSAGE, { conversation_id: conversationId, ai: false, remaining: (await db.quota())?.remaining ?? null, errors: [diagnostic(e)] });
   }
   const reply = out.crisis ? CRISIS_REPLY : out.text || (out.actions.length ? 'Voici ce que je te propose.' : 'Je n’ai pas compris, peux-tu reformuler ?');
   const { messageId, actionIds } = await persist(db, conversationId, text, { ...out, text: reply });
@@ -379,8 +386,8 @@ async function guidedParseMode(req: AssistantRequest, deps: Deps): Promise<Assis
         messages.push({ role: 'user', content: "Ta réponse n'était pas un tableau JSON valide. Réponds uniquement par le tableau JSON demandé." });
       }
     }
-  } catch {
-    return baseResponse(UNAVAILABLE_MESSAGE, { ai: false, items: [] });
+  } catch (e) {
+    return baseResponse(UNAVAILABLE_MESSAGE, { ai: false, items: [], errors: [diagnostic(e)] });
   }
   if (!items) return baseResponse('', { ai: false, items: [], errors: ['JSON invalide après un nouvel essai.'] });
   const conversationId = await db.ensureConversation(req.conversation_id ?? null, 'guided', `Planification du ${frenchDate(date)}`);
@@ -471,8 +478,8 @@ async function adjustPlanMode(req: AssistantRequest, deps: Deps): Promise<Assist
   let out: LoopResult;
   try {
     out = await toolLoop(deps, buildSystemPrompt(l.context, 'adjust_plan'), [{ role: 'user', content: userText }], ADJUST_TOOLS, l, state);
-  } catch {
-    return baseResponse(UNAVAILABLE_MESSAGE, { ai: false, ops: [] });
+  } catch (e) {
+    return baseResponse(UNAVAILABLE_MESSAGE, { ai: false, ops: [], errors: [diagnostic(e)] });
   }
   const ops = out.actions.flatMap((a) => (a.type === 'task_ops' ? a.ops : []));
   const ids = new Set(proposed.map((p) => p.id));

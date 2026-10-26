@@ -23,16 +23,70 @@
 }
 .item {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink);
+}
+.main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: inherit;
   text-align: left;
-  min-height: 56px;
+  min-height: 44px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.readBtn {
+  min-height: 36px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pref {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.pref input {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  accent-color: var(--lime);
+  flex: none;
 }
 .unread {
   border-color: var(--lime);

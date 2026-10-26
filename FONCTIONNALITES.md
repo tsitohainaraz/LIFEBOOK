@@ -297,10 +297,12 @@
 - [x] **V1** Discussion : bulles, réponses, fichiers, @mentions, modification et suppression de ses messages, chargement par 30, messages système, compteur de non-lus.
 - [x] **V1** Rapport du jour d'équipe : résumé automatique (éléments cochés, cartes terminées, cartes en cours), avancement du tableau, Fait / Bloqué par / Demain, photos ; publié dans la discussion ; onglet « Équipe du jour » par date.
 - [x] **V1** Notifications : carte assignée, commentaire, message (une seule notification par tableau), mention, nouveau membre, rapport envoyé, échéance demain, échéance dépassée, rappel du rapport à 18:00 (heure locale) ; cloche et page `/notifications`.
+- [x] **V1** Notifications complètes : carte déplacée, nouvelles cartes (regroupées par tableau), carte terminée, échéance modifiée, retiré d’une carte, carte archivée ou supprimée, changement de rôle ; filtres Toutes / Non lues / Lues, « Tout marquer comme lu », marquer une notification lue ou non lue ; réglages par type (⚙).
+- [x] **V1** « Je veux participer » sur une carte : le créateur et les propriétaires reçoivent la demande avec Accepter / Refuser (dans la notification et sur la carte) ; accepter assigne la personne.
 - [x] **V1** Liens avec LifeBook : mes cartes dans la Journée, la Semaine, le Mois, « À suivre » et le cercle Maintenant ; tâche liée à une carte ; progression des objectifs reliés à un tableau.
 - [ ] **V2** Notifications push sur le téléphone (étape 10 : Web Push et Edge Function, colonne `notifications.pushed_at` prévue).
 
-**Tables :** `boards`, `board_members`, `board_invites`, `lists`, `cards`, `card_members`, `board_labels`, `card_labels`, `checklist_items`, `card_comments`, `board_activity` (0002_tableaux.sql) ; `attachments`, `messages`, `message_reads`, `mentions`, `daily_reports`, `notifications` (0003_equipe.sql) ; colonne `tasks.card_id` ; bucket privé `board-files`.
+**Tables :** `boards`, `board_members`, `board_invites`, `lists`, `cards`, `card_members`, `board_labels`, `card_labels`, `checklist_items`, `card_comments`, `board_activity` (0002_tableaux.sql) ; `attachments`, `messages`, `message_reads`, `mentions`, `daily_reports`, `notifications` (0003_equipe.sql) ; `notification_prefs`, `card_join_requests` (0005_notifications.sql) ; colonne `tasks.card_id` ; bucket privé `board-files`.
 
 ## 27. Assistante de planification (IA)
 

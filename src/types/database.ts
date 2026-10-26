@@ -446,6 +446,20 @@ export type PlanLimitRow = {
   features: { [key: string]: Json | undefined };
 };
 
+export type NotificationPrefsRow = { user_id: string; muted: string[]; updated_at: string };
+
+export type CardJoinStatus = 'pending' | 'accepted' | 'refused';
+export type CardJoinRequestRow = {
+  id: string;
+  card_id: string;
+  board_id: string;
+  user_id: string;
+  status: CardJoinStatus;
+  answered_by: string | null;
+  answered_at: string | null;
+  created_at: string;
+};
+
 export type PremiumInterestRow = { user_id: string; created_at: string };
 
 export type AiQuota = { plan: 'free' | 'premium'; daily_limit: number; used: number; remaining: number };
@@ -508,6 +522,8 @@ export type Database = {
       ai_memory: Table<AiMemoryRow, MakeInsert<AiMemoryRow, 'kind' | 'text'>>;
       ai_settings: Table<AiSettingsRow, Partial<AiSettingsRow>>;
       premium_interest: Table<PremiumInterestRow, Partial<PremiumInterestRow>>;
+      notification_prefs: Table<NotificationPrefsRow, Partial<NotificationPrefsRow>>;
+      card_join_requests: Table<CardJoinRequestRow, Partial<CardJoinRequestRow>>;
       plan_limits: Table<PlanLimitRow, PlanLimitRow>;
     };
     Views: {
@@ -524,6 +540,9 @@ export type Database = {
       ai_quota: { Args: Record<string, never>; Returns: AiQuota[] };
       ai_take_quota: { Args: Record<string, never>; Returns: boolean };
       get_insights: { Args: { days?: number }; Returns: Json };
+      request_card_join: { Args: { p_card: string }; Returns: string };
+      answer_card_join: { Args: { p_request: string; p_accept: boolean }; Returns: undefined };
+      can_answer_card: { Args: { c: string }; Returns: boolean };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

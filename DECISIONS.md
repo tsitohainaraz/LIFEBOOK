@@ -214,3 +214,9 @@ Choix non couverts par `CLAUDE.md`, `FONCTIONNALITES.md` ou `PROMPTS_COPILOTE.md
 - NVIDIA (build.nvidia.com, API compatible OpenAI) est essayé en premier quand le secret `NVIDIA_API_KEY` existe ; modèle `NVIDIA_MODEL`, par défaut `nvidia/nemotron-3-ultra-550b-a55b` (choisi pour les appels d'outils). La « réflexion » du modèle est désactivée (`chat_template_kwargs.enable_thinking = false`) pour des réponses plus rapides ; délai d'attente 60 s.
 - Ordre : Anthropic (premium + clé), NVIDIA, Groq, OpenRouter. Toute erreur d'un fournisseur (429, 5xx, réseau, mais aussi 400, 401, 404) fait passer au suivant ; l'erreur finale réunit les causes de chaque fournisseur, et l'application l'affiche en petit (« Détail : … »).
 - Endpoints gratuits : limites de requêtes par minute, et usage commercial à vérifier dans les conditions de NVIDIA avant une mise en production.
+
+## Connexion par mot de passe
+- Écran de connexion : choix « Mot de passe » (par défaut) ou « Code par e-mail » ; Google reste au-dessus. Mot de passe : au moins 8 caractères, une majuscule, une minuscule et un chiffre (`src/utils/password.ts`, testé), règles cochées pendant la saisie.
+- « Créer un compte » : `signUp` ; si Supabase demande de confirmer l'adresse, l'écran du code s'ouvre (type `signup`, renvoi avec `resend`), et le lien de l'e-mail fonctionne aussi. Une adresse déjà utilisée est détectée (aucune identité renvoyée) sans révéler d'autre information.
+- « Mot de passe oublié ? » : lien envoyé par e-mail vers `/nouveau-mot-de-passe` (page hors des gardes de route, attend la session de récupération, puis `updateUser`). Un compte créé avec un code ou Google peut ainsi choisir un mot de passe, ou le faire dans Mon compte (« Définir ou changer mon mot de passe »).
+- Les mêmes règles doivent être activées côté serveur dans Supabase (Authentication → Providers → Email → Password requirements), sinon une requête faite hors de l'application pourrait choisir un mot de passe faible.

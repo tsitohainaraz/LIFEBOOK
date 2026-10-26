@@ -5,6 +5,7 @@ import { GuestRoute, OnboardingRoute, ProtectedRoute } from './components/RouteG
 import { LoginPage } from './pages/auth/LoginPage';
 import { VerifyPage } from './pages/auth/VerifyPage';
 import { CallbackPage } from './pages/auth/CallbackPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { OnboardingPage } from './pages/onboarding/OnboardingPage';
 import { HomePage } from './pages/home/HomePage';
 import { DayPage } from './pages/day/DayPage';
@@ -34,6 +35,7 @@ export function App() {
             <Route path="/verify" element={<VerifyPage />} />
           </Route>
           <Route path="/auth/callback" element={<CallbackPage />} />
+          <Route path="/nouveau-mot-de-passe" element={<ResetPasswordPage />} />
           <Route path="/invitation/:token" element={<InviteGate />} />
           <Route element={<OnboardingRoute />}>
             <Route path="/onboarding" element={<OnboardingPage />} />

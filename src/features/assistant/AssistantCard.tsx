@@ -83,11 +83,40 @@ export function AssistantCard({ planToday = false }: { planToday?: boolean }) {
 }
 
 /** Bouton « Demander à l'assistante » des pages Journée, Semaine et Ma vie. */
-export function AskAssistantButton({ context, draft, label = "Demander à l'assistante" }: { context: 'day' | 'week' | 'life'; draft: string; label?: string }) {
+export function AskAssistantButton({
+  context,
+  draft,
+  send,
+  label = "Demander à l'assistante",
+}: {
+  context: 'day' | 'week' | 'life';
+  draft?: string;
+  /** Message envoyé tout de suite (au lieu de préremplir le champ). */
+  send?: string;
+  label?: string;
+}) {
   const navigate = useNavigate();
   return (
-    <button type="button" className={`btn outline sm ${styles.ask}`} onClick={() => navigate('/assistante', { state: { context, draft } satisfies AssistantNavState })}>
+    <button type="button" className={`btn outline sm ${styles.ask}`} onClick={() => navigate('/assistante', { state: { context, draft, send } satisfies AssistantNavState })}>
       <Icon name="spark" /> {label}
     </button>
+  );
+}
+
+/** Proposition du cercle « Maintenant » quand la journée a pris du retard. */
+export function ReplanOffer({ onDismiss }: { onDismiss: () => void }) {
+  const navigate = useNavigate();
+  return (
+    <div className={styles.replan} role="status">
+      <span>Je réorganise ta fin de journée ?</span>
+      <div className="row">
+        <button type="button" className="btn primary sm" onClick={() => navigate('/assistante', { state: { replan: true, context: 'day' } satisfies AssistantNavState })}>
+          Oui
+        </button>
+        <button type="button" className="btn sm" onClick={onDismiss}>
+          Non merci
+        </button>
+      </div>
+    </div>
   );
 }

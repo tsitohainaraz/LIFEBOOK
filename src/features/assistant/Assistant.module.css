@@ -60,6 +60,20 @@
 .suggestion:hover {
   border-color: var(--lime);
 }
+.replan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--urgent);
+  background: var(--urgent-soft);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+}
 .ask {
   align-self: flex-start;
 }

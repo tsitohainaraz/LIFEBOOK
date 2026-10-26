@@ -29,6 +29,16 @@ fixed_time seulement pour un rendez-vous à heure fixe ; goal_id seulement s'il 
   replan_rest_of_day: `Tâche : expliquer en 1 ou 2 phrases la réorganisation de la fin de journée (ce qui est déplacé, ce qui passe à demain). Pas d'outil.`,
 };
 
-export function buildSystemPrompt(context: string, mode: PromptMode = 'chat'): string {
-  return [SYSTEM_RULES, MODE_RULES[mode], '# Contexte (calculé par LifeBook, fiable)', context].filter(Boolean).join('\n\n');
+export type ConversationContext = 'home' | 'day' | 'week' | 'life' | 'guided';
+
+const CONTEXT_RULES: Partial<Record<ConversationContext, string>> = {
+  day: 'Conversation ouverte depuis la journée : concentre-toi sur la journée dont il parle.',
+  week: 'Conversation ouverte depuis la semaine : aide à répartir les priorités sur les 7 prochains jours du calendrier.',
+  life: `Conversation « Planifier ma vie » : pose des questions sur ses rêves et leurs échéances, une seule à la fois.
+Quand tu en sais assez, propose : les grandes étapes par âge (create_goal, level = life, avec target_age), les objectifs de l'année (create_goal, level = year, avec deadline) et les premières étapes du mois (add_goal_steps sur un objectif existant). Tout reste soumis à sa confirmation.`,
+};
+
+export function buildSystemPrompt(context: string, mode: PromptMode = 'chat', conversation?: ConversationContext): string {
+  const extra = mode === 'chat' && conversation ? (CONTEXT_RULES[conversation] ?? '') : '';
+  return [SYSTEM_RULES, MODE_RULES[mode], extra, '# Contexte (calculé par LifeBook, fiable)', context].filter(Boolean).join('\n\n');
 }

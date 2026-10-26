@@ -320,7 +320,7 @@ async function chatMode(req: AssistantRequest, deps: Deps): Promise<AssistantRes
   const state = validationState(l);
   let out: LoopResult;
   try {
-    out = await toolLoop(deps, buildSystemPrompt(l.context, 'chat'), messages, ALL_TOOLS, l, state);
+    out = await toolLoop(deps, buildSystemPrompt(l.context, 'chat', context), messages, ALL_TOOLS, l, state);
   } catch {
     return baseResponse(UNAVAILABLE_MESSAGE, { conversation_id: conversationId, ai: false, remaining: (await db.quota())?.remaining ?? null });
   }

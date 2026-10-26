@@ -356,3 +356,24 @@ Deno.test('extractJsonArray : tolère un bloc de code, refuse le reste', () => {
   eq(extractJsonArray('{"a":1}'), null);
   eq(extractJsonArray('[1,'), null);
 });
+
+Deno.test('replan_rest_of_day : ce qui ne rentre plus passe à demain', async () => {
+  const { replanRestOfDay } = await import('./handler.ts');
+  const t = (id: string, start: string, end: string) => ({ id, title: id, category: 'travail', date: '2026-10-26', start, end, done: false, postponed_count: 0 });
+  const r = replanRestOfDay(
+    {
+      tasks: [t('A', '19:00', '20:00'), t('B', '20:30', '21:30')],
+      now: { date: '2026-10-26', time: '21:00', minutes: 21 * 60, timezone: 'Indian/Antananarivo' },
+      sleep: { wake: '06:30', bed: '22:30' },
+      calendarDates: ['2026-10-26', '2026-10-27'],
+    },
+    [],
+    false,
+  );
+  const today = r.ops.filter((o) => o.op === 'move' && o.date === '2026-10-26');
+  const tomorrow = r.ops.filter((o) => o.op === 'move' && o.date === '2026-10-27');
+  eq(today.length, 1);
+  eq(tomorrow.length, 1);
+  eq(r.tomorrow.length, 1);
+  eq(r.stillUnplaced.length, 0);
+});

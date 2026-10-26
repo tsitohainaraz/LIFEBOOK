@@ -18,11 +18,12 @@ import { REASONS, WHO_WEEKLY_MINUTES, healthReasons, mustAskDoctor, suggestedSpo
 import { daysUsedAndLeft, lifeCountdown, lifeSummary } from '../../utils/life';
 import { collectPlannedItems, freeMinutesBeforeNext, pickNow, taskEnd, type NowResult, type PlannedItem } from '../../utils/now';
 import { Upcoming } from './Upcoming';
-import { AssistantCard } from '../../features/assistant/AssistantCard';
+import { AssistantCard, ReplanOffer } from '../../features/assistant/AssistantCard';
+import { shouldOfferReplan } from '../../features/guided/carry';
 import { firstFreeSlot } from '../../utils/schedule';
 import type { Category, ProfileRow, TaskRow } from '../../types/database';
 import styles from './Home.module.css';
-import { currentDate, nowISO } from '../../lib/serverTime';
+import { currentDate, nowISO, toZoned } from '../../lib/serverTime';
 import { cardAsTask, isCardTask, urgentCards, useLinkedCards, useMyCards } from '../../features/boards/myCards';
 import { markCardDone, useCardDonePrompt } from '../../features/boards/CardDonePrompt';
 import { cardDueStatus } from '../../features/boards/boardUtils';
@@ -73,6 +74,10 @@ export function HomePage() {
 
   const doneCount = tasks.filter((t) => t.done_at).length;
   const nm = nowMinutes();
+  const [replanDismissed, setReplanDismissed] = useState(false);
+  // Reports faits aujourd'hui : tâches reportées modifiées aujourd'hui (heure locale du profil).
+  const laterToday = allTasks.filter((t) => t.postponed_count > 0 && todayISO(toZoned(Date.parse(t.updated_at))) === today).length;
+  const offerReplan = shouldOfferReplan(tasks, today, nm, laterToday);
 
   async function finish(task: TaskRow) {
     try {
@@ -114,6 +119,8 @@ export function HomePage() {
           onPlan={() => navigate('/jour')}
           onReport={() => navigate('/rapport')}
           planned={planned}
+          offerReplan={offerReplan && !replanDismissed}
+          onDismissReplan={() => setReplanDismissed(true)}
         />
       )}
 
@@ -308,9 +315,13 @@ function LiveNow({
   onPlan,
   onReport,
   planned,
+  offerReplan,
+  onDismissReplan,
 }: {
   result: NowResult<TaskRow>;
   planned: PlannedItem[];
+  offerReplan: boolean;
+  onDismissReplan: () => void;
   busy: boolean;
   onFinish: (t: TaskRow) => void;
   onLater: (t: TaskRow) => void;
@@ -327,7 +338,12 @@ function LiveNow({
       onLater={() => result.task && onLater(result.task)}
       onPlan={onPlan}
       onReport={onReport}
-      footer={<Upcoming items={planned} now={result} />}
+      footer={
+        <>
+          {offerReplan && <ReplanOffer onDismiss={onDismissReplan} />}
+          <Upcoming items={planned} now={result} />
+        </>
+      }
     />
   );
 }

@@ -179,4 +179,7 @@ Deno.test('Message système : règles en français et contexte', () => {
   ok(s.includes('jamais de diagnostic'));
   ok(s.endsWith('CONTEXTE'));
   ok(buildSystemPrompt('C', 'guided_parse').includes('UNIQUEMENT par un tableau JSON'));
+  const life = buildSystemPrompt('C', 'chat', 'life');
+  ok(life.includes('Planifier ma vie') && life.includes('level = life') && life.includes('add_goal_steps'));
+  ok(!buildSystemPrompt('C', 'chat', 'home').includes('Planifier ma vie'));
 });

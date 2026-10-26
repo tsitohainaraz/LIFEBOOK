@@ -69,7 +69,7 @@ export function LifePage() {
           </div>
         </div>
       </section>
-      <AskAssistantButton context="life" label="Planifier ma vie avec l'assistante" draft="Aide-moi à planifier ma vie : mes rêves, mes échéances et les grandes étapes." />
+      <AskAssistantButton context="life" label="Planifier ma vie avec l'assistante" send="Aide-moi à planifier ma vie : mes rêves, mes échéances et les grandes étapes." />
 
       {planQ.isLoading ? (
         <LoadingState label="Chargement de ton plan de vie…" />

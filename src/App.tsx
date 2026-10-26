@@ -21,6 +21,7 @@ import { CardSheet } from './features/boards/CardSheet';
 import { InviteGate } from './features/boards/InvitePage';
 import { GuidedPage } from './features/guided/GuidedPage';
 import { AssistantPage } from './features/assistant/AssistantPage';
+import { MemoryPage } from './features/assistant/MemoryPage';
 import { NotificationsPage } from './features/notifications/NotificationsPage';
 
 export function App() {
@@ -39,6 +40,7 @@ export function App() {
           </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/assistante" element={<AssistantPage />} />
+            <Route path="/assistante/memoire" element={<MemoryPage />} />
             <Route path="/planifier-demain" element={<GuidedPage />} />
             <Route path="/assistante/:conversationId" element={<AssistantPage />} />
             <Route element={<AppShell />}>

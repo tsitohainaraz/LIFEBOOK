@@ -336,6 +336,42 @@
   padding: 0;
 }
 
+.premium {
+  border: 1px solid var(--lime);
+  border-radius: var(--r-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--ok-soft);
+}
+.premium ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+.premium button {
+  align-self: flex-start;
+}
+.memory {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.memory > div,
+.memory > form {
+  width: 100%;
+}
+.memoryText {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .listening,
   .thinking {

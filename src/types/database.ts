@@ -446,6 +446,8 @@ export type PlanLimitRow = {
   features: { [key: string]: Json | undefined };
 };
 
+export type PremiumInterestRow = { user_id: string; created_at: string };
+
 export type AiQuota = { plan: 'free' | 'premium'; daily_limit: number; used: number; remaining: number };
 
 export type BucketItemRow = Timestamps & {
@@ -505,6 +507,7 @@ export type Database = {
       ai_usage: Table<AiUsageRow, AiUsageRow>;
       ai_memory: Table<AiMemoryRow, MakeInsert<AiMemoryRow, 'kind' | 'text'>>;
       ai_settings: Table<AiSettingsRow, Partial<AiSettingsRow>>;
+      premium_interest: Table<PremiumInterestRow, Partial<PremiumInterestRow>>;
       plan_limits: Table<PlanLimitRow, PlanLimitRow>;
     };
     Views: {

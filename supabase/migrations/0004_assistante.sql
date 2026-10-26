@@ -349,3 +349,41 @@ $$;
 
 revoke all on function public.get_insights(int) from public, anon;
 grant execute on function public.get_insights(int) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Phase 7 : intérêt pour l'offre premium et statistiques (sans contenu)
+-- ---------------------------------------------------------------------------
+create table if not exists public.premium_interest (
+  user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.premium_interest enable row level security;
+drop policy if exists "premium_interest_select_own" on public.premium_interest;
+create policy "premium_interest_select_own" on public.premium_interest for select to authenticated using (user_id = (select auth.uid()));
+drop policy if exists "premium_interest_insert_own" on public.premium_interest;
+create policy "premium_interest_insert_own" on public.premium_interest for insert to authenticated with check (user_id = (select auth.uid()));
+drop policy if exists "premium_interest_delete_own" on public.premium_interest;
+create policy "premium_interest_delete_own" on public.premium_interest for delete to authenticated using (user_id = (select auth.uid()));
+
+-- Par jour (UTC) et par fournisseur : réponses, utilisateurs actifs, tokens, taux de réponses utiles et d'actions appliquées.
+-- Aucun texte de message. Lisible seulement depuis le SQL Editor (aucun droit pour anon et authenticated).
+create or replace view public.ai_stats_daily as
+select
+  (m.created_at at time zone 'UTC')::date as day,
+  coalesce(m.provider, 'inconnu') as provider,
+  count(*) as messages,
+  count(distinct m.user_id) as active_users,
+  coalesce(sum(m.input_tokens), 0)::bigint as input_tokens,
+  coalesce(sum(m.output_tokens), 0)::bigint as output_tokens,
+  round(avg(case when m.feedback = 1 then 1.0 when m.feedback = -1 then 0.0 end), 3) as useful_rate,
+  round(avg(a.applied), 3) as applied_rate
+from public.ai_messages m
+left join lateral (
+  select avg(case when x.status in ('accepted', 'auto_applied') then 1.0 when x.status in ('ignored', 'undone') then 0.0 end) as applied
+  from public.ai_actions x
+  where x.message_id = m.id
+) a on true
+where m.role = 'assistant'
+group by 1, 2;
+
+revoke all on public.ai_stats_daily from public, anon, authenticated;

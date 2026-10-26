@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '../../components/Icon';
 import { Sheet } from '../../components/Sheet';
@@ -192,6 +192,9 @@ function AssistantChat() {
           <strong>Ton assistante</strong>
           <span className="small muted">{remainingLabel(left)}</span>
         </div>
+        <Link to="/assistante/memoire" className="iconbtn" aria-label="Ce que l'assistante sait de moi">
+          <Icon name="user" />
+        </Link>
         <button type="button" className="iconbtn" aria-label="Mes conversations" onClick={() => setListOpen(true)}>
           <Icon name="list" />
         </button>
